@@ -3,7 +3,9 @@
 	let { user } = $derived(data);
 </script>
 
-<div class="flex h-full grow items-center justify-center gap-8 bg-gray-100 py-4">
+<div
+	class="flex h-full grow flex-col items-center justify-center gap-8 bg-gray-100 py-4 md:flex-row"
+>
 	{#if user}
 		<a href="/create" class="homepage-link"> Create a new bracket </a>
 	{:else}
