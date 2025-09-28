@@ -88,6 +88,7 @@
 			});
 			const data = await saved.json();
 			if (data.ok) {
+				invalidateAll();
 				current_pick = data.data.id;
 				alerts.add({ type: 'ok', message: 'Picks saved', timeout: 2500 });
 			} else {

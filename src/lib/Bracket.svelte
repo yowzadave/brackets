@@ -373,7 +373,7 @@
 		/>
 		{#if seeds[index]}
 			<input
-				class="w-8 min-w-0 flex-none border-0 px-1 text-right outline-0"
+				class="w-6 min-w-0 flex-none border-0 px-1 text-right outline-0"
 				type="text"
 				placeholder="-"
 				value={seeds[index]?.seed}
@@ -433,7 +433,7 @@
 					</div>
 				{/if}
 			</div>
-			<div class="flex w-4 flex-none items-center justify-center text-right">
+			<div class="flex w-3 flex-none items-center justify-center text-right">
 				{#if player === 'player_a' && editable}
 					<button class="edit-button" onclick={() => defineResultModal(match_index)}>
 						<EditIcon />
@@ -457,10 +457,10 @@
 	<div class="relative flex h-full w-full items-center justify-between">
 		{#if pickable && pick_seed && pick && pick.winner == null}
 			<div
-				class="match-container flex h-full w-full items-center justify-between gap-2 hover:bg-teal-200"
+				class="match-container flex h-full w-full items-center justify-between gap-1 hover:bg-teal-200"
 			>
 				<button
-					class="flex grow gap-2 truncate px-1 text-left"
+					class="flex grow gap-1 truncate px-1 text-left"
 					onclick={() => pickWinner(match_index, player)}
 				>
 					<div class="truncate">
@@ -475,7 +475,7 @@
 				</button>
 				{#if match.round === 0}
 					<div
-						class="edit-button flex w-4 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
+						class="edit-button flex w-3 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
 					>
 						<button onclick={() => giveNickname(match_index, player)}>
 							<EditIcon />
@@ -483,7 +483,7 @@
 					</div>
 				{:else}
 					<div
-						class="edit-button flex w-4 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
+						class="edit-button flex w-3 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
 					>
 						<button onclick={() => unpickWinner(match_index, player)}>
 							<XIcon />
@@ -608,9 +608,9 @@
 	{/each}
 
 	{#if overall_winner}
-		<div class="sticky right-4 flex flex-col items-center justify-center">
+		<div class="sticky right-4 hidden flex-col items-center justify-center md:flex">
 			<div class="relative top-28 z-50 min-w-36 border border-gray-400 bg-white p-4 shadow-lg">
-				<div class="text-lg text-gray-400 italic">Winner:</div>
+				<div class="text-lg text-gray-400 italic">Champion:</div>
 				<div class="text-3xl font-bold">{overall_winner_nickname || overall_winner?.name}</div>
 				{#if pickable && mode === 'user-picks'}
 					<button
