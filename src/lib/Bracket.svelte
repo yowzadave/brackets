@@ -254,13 +254,13 @@
 		return round_match_indices[match.round + 1] + index_in_next_round;
 	}
 
-	function parentMatch(match_index: number) {
-		const r = Math.log2(draw_size);
+	function parentMatch(match_index: number, player: 'player_a' | 'player_b') {
 		const match = matches[match_index];
 		if (match.round <= 0) return null;
 		const index_in_round = match_index - round_match_indices[match.round];
 		const index_in_prev_round = index_in_round * 2;
-		return round_match_indices[match.round - 1] + index_in_prev_round;
+		const pm = round_match_indices[match.round - 1] + index_in_prev_round;
+		return player === 'player_a' ? pm : pm + 1;
 	}
 
 	function defineWinner(match_index: number, player: 'player_a' | 'player_b') {
@@ -323,16 +323,35 @@
 		nicknames[edit_nickname_index] = nickname.trim() || null;
 	}
 
+	function undoResult(match_index: number, player: 'player_a' | 'player_b') {
+		const result = results[match_index];
+		result[player] = null;
+		const parent = parentMatch(match_index, player);
+		if (parent != null) {
+			const parent_result = results[parent];
+			parent_result.winner = null;
+		}
+
+		results = results;
+	}
+
 	function unpickWinner(match_index: number, player: 'player_a' | 'player_b') {
 		const pick = picks[match_index];
 		pick[player] = null;
-		const parent = parentMatch(match_index);
+		const parent = parentMatch(match_index, player);
 		if (parent != null) {
 			const parent_pick = picks[parent];
 			parent_pick.winner = null;
 		}
 
 		picks = picks;
+	}
+
+	function undoOverallWinner() {
+		const last_result = results[results.length - 1];
+		if (!last_result) return;
+		last_result.winner = null;
+		results = results;
 	}
 
 	function unpickOverallWinner() {
@@ -352,8 +371,7 @@
 		edit_result_el.open();
 	}
 
-	function defineResult(result) {
-		results[edit_match_index].winner = edit_match_winner;
+	function defineResult() {
 		results[edit_match_index].score = edit_match_score;
 		results = results;
 	}
@@ -387,33 +405,43 @@
 {/snippet}
 
 {#snippet result_actual(match_index: number, player: 'player_a' | 'player_b')}
+	{@const match = matches[match_index]}
 	{@const result = results[match_index]}
 	{@const seed = result ? seeds[result[player] ?? -1] : null}
 	{@const is_winner = result && result.winner != null && result.winner === result[player]}
 	<div
-		class="relative flex h-full w-full items-center justify-between"
+		class="relative flex h-full w-full items-center justify-between gap-1 overflow-hidden"
 		class:bg-teal-100={is_winner}
 	>
 		{#if editable && seed && result && result.winner == null}
 			<button
-				class="flex h-full w-full items-center gap-2 text-left hover:bg-teal-200"
+				class="flex h-full w-full items-center overflow-hidden text-left hover:bg-teal-200"
 				onclick={() => defineWinner(match_index, player)}
 			>
 				<div class="truncate px-1">{seed?.name}</div>
 				{#if seed?.seed != undefined}
-					<div class="text-gray-400 italic">
+					<div class="px-1 text-gray-400 italic">
 						{seed.seed}
 					</div>
 				{/if}
 			</button>
+			{#if match.round !== 0}
+				<div
+					class="edit-button flex w-3 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
+				>
+					<button onclick={() => undoResult(match_index, player)}>
+						<XIcon />
+					</button>
+				</div>
+			{/if}
 		{:else}
-			<div class="flex grow justify-between">
-				<div class="flex grow gap-2">
+			<div class="flex grow justify-between overflow-hidden">
+				<div class="flex grow overflow-hidden">
 					<div class="truncate px-1" class:font-bold={is_winner}>
 						{seed?.name}
 					</div>
 					{#if seed?.seed != undefined}
-						<div class="text-gray-400 italic">
+						<div class="px-1 text-gray-400 italic">
 							{seed.seed}
 						</div>
 					{/if}
@@ -433,8 +461,8 @@
 					</div>
 				{/if}
 			</div>
-			<div class="flex w-3 flex-none items-center justify-center text-right">
-				{#if player === 'player_a' && editable}
+			<div class="flex w-4 flex-none items-center justify-center text-right">
+				{#if player === 'player_a' && editable && result?.winner != null && result.player_a != null && result.player_b != null}
 					<button class="edit-button" onclick={() => defineResultModal(match_index)}>
 						<EditIcon />
 					</button>
@@ -454,7 +482,7 @@
 	{@const is_pick_correct = result?.winner != null && pick?.winner === result.winner}
 	{@const is_pick_incorrect =
 		result?.winner != null && pick?.winner != null && pick.winner !== result.winner}
-	<div class="relative flex h-full w-full items-center justify-between">
+	<div class="relative flex h-full w-full items-center justify-between overflow-hidden">
 		{#if pickable && pick_seed && pick && pick.winner == null}
 			<div
 				class="match-container flex h-full w-full items-center justify-between gap-1 hover:bg-teal-200"
@@ -475,7 +503,7 @@
 				</button>
 				{#if match.round === 0}
 					<div
-						class="edit-button flex w-3 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
+						class="edit-button flex w-4 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
 					>
 						<button onclick={() => giveNickname(match_index, player)}>
 							<EditIcon />
@@ -483,7 +511,7 @@
 					</div>
 				{:else}
 					<div
-						class="edit-button flex w-3 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
+						class="edit-button flex w-4 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
 					>
 						<button onclick={() => unpickWinner(match_index, player)}>
 							<XIcon />
@@ -492,17 +520,15 @@
 				{/if}
 			</div>
 		{:else}
-			<div class="flex grow justify-between">
-				<div class="flex grow gap-2">
-					<div class="truncate px-1" class:font-bold={is_pick_winner}>
-						{nickname ? nickname : pick_seed?.name}
-					</div>
-					{#if pick_seed?.seed != undefined}
-						<div class="text-gray-400 italic">
-							{pick_seed.seed}
-						</div>
-					{/if}
+			<div class="flex grow justify-between overflow-hidden">
+				<div class="grow truncate px-1" class:font-bold={is_pick_winner}>
+					{nickname ? nickname : pick_seed?.name}
 				</div>
+				{#if pick_seed?.seed != undefined}
+					<div class="flex-none text-gray-400 italic">
+						{pick_seed.seed}
+					</div>
+				{/if}
 			</div>
 			<div class="flex w-4 flex-none items-center justify-center text-right">
 				{#if player === 'player_a' && is_pick_correct}
@@ -609,13 +635,22 @@
 
 	{#if overall_winner}
 		<div class="sticky right-4 hidden flex-col items-center justify-center md:flex">
-			<div class="relative top-28 z-50 min-w-36 border border-gray-400 bg-white p-4 shadow-lg">
+			<div
+				class="overall-winner-container relative top-28 z-50 min-w-36 border border-gray-400 bg-white p-4 shadow-lg"
+			>
 				<div class="text-lg text-gray-400 italic">Champion:</div>
 				<div class="text-3xl font-bold">{overall_winner_nickname || overall_winner?.name}</div>
 				{#if pickable && mode === 'user-picks'}
 					<button
-						class="absolute top-0 right-0 rounded p-1 text-gray-400 hover:text-black"
+						class="undo-winner-button absolute top-0 right-0 rounded p-1 text-gray-400 hover:text-black"
 						onclick={unpickOverallWinner}
+					>
+						<XIconLarge />
+					</button>
+				{:else if editable && mode === 'view-actual'}
+					<button
+						class="undo-winner-button absolute top-0 right-0 rounded p-1 text-gray-400 hover:text-black"
+						onclick={undoOverallWinner}
 					>
 						<XIconLarge />
 					</button>
@@ -640,23 +675,13 @@
 	]}
 	confirm={defineResult}
 >
-	<div slot="title">Edit Match Result</div>
+	<div slot="title">Edit Match Score</div>
 	<div slot="content" class="space-y-4">
-		<label for="winner" class="flex items-center">
-			<div class="w-24 flex-none text-gray-400 italic">Winner</div>
-			<select name="winner" bind:value={edit_match_winner}>
-				<option value={edit_match_player_a}>{seeds[edit_match_player_a].name}</option>
-				<option value={edit_match_player_b}>{seeds[edit_match_player_b].name}</option>
-			</select>
-		</label>
-		<label for="score" class="space-y-2">
-			<div class="text-gray-400 italic">Score</div>
-			<MatchScore
-				player_a={seeds[edit_match_player_a]}
-				player_b={seeds[edit_match_player_b]}
-				bind:score={edit_match_score}
-			/>
-		</label>
+		<MatchScore
+			player_a={seeds[edit_match_player_a]}
+			player_b={seeds[edit_match_player_b]}
+			bind:score={edit_match_score}
+		/>
 	</div>
 </Modal>
 
@@ -706,6 +731,14 @@
 	}
 
 	.match-container:hover .edit-button {
+		@apply visible;
+	}
+
+	.undo-winner-button {
+		@apply invisible;
+	}
+
+	.overall-winner-container:hover .undo-winner-button {
 		@apply visible;
 	}
 </style>

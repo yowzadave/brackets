@@ -78,7 +78,7 @@
 <!-- svelte-ignore a11y_positive_tabindex -->
 <div class="space-y-2">
 	<div class="flex items-center">
-		<div class="w-24 flex-none truncate text-xs">{player_a.name}</div>
+		<div class="w-28 flex-none truncate text-xs">{player_a.name}</div>
 		<div class="flex items-center gap-4 px-1">
 			<input
 				class="score-input"
@@ -118,7 +118,7 @@
 	</div>
 	<div>
 		<div class="flex items-center">
-			<div class="w-24 flex-none truncate text-xs">{player_b.name}</div>
+			<div class="w-28 flex-none truncate text-xs">{player_b.name}</div>
 			<div class="flex items-center gap-4 px-1">
 				<input
 					class="score-input"
