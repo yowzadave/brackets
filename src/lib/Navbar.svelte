@@ -8,7 +8,7 @@
 </script>
 
 <div class="flex items-center justify-between bg-black px-4 py-2 text-sm text-gray-200">
-	<a href="/"><div class="font-bold">Brackets</div></a>
+	<a href="/"><div class="font-bold">BKTS</div></a>
 	<div class="text-xs">
 		{#if user}
 			<div class="relative" use:clickOutside onoutclick={() => (show_menu = false)}>
