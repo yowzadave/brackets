@@ -1,0 +1,71 @@
+@import 'tailwindcss';
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+button {
+  cursor: pointer;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+}
+
+
+
+h2 {
+  @apply mb-4;
+}
+
+.btn {
+  @apply font-bold py-2 px-4 rounded text-sm border border-black;
+}
+
+.btn:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.btn.btn-primary {
+  @apply bg-black text-white;
+  border-color: transparent;
+}
+
+.btn.btn-danger {
+  @apply text-white bg-red-500;
+  border-color: transparent;
+
+  &:hover {
+    @apply bg-red-600 border-red-700;
+  }
+
+  &:active,
+  &.active {
+    @apply bg-red-600;
+  }
+}
+
+.btn.btn-danger-minimal {
+  @apply text-red-500 border-red-500;
+  background-color: transparent;
+
+  &:hover {
+    @apply text-red-600;
+  }
+
+  &:active {
+    @apply text-red-600;
+  }
+}
+
+.btn-text {
+  @apply text-blue-600 text-sm;
+}
+
+.btn-text:hover {
+  @apply text-blue-800 underline;
+}
+
+select {
+  @apply border border-gray-300 rounded-lg p-1;
+}
