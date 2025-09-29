@@ -47,24 +47,25 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
     if (p.data) {
       picks = p.data;
     }
-  }
 
-  const ap = await supabase
-    .from('picks')
-    .select('*')
-    .eq('bracket_id', bracket.data.id)
-    .neq('user_id', user?.id)
-    .order('user_name', { ascending: true });
+    const ap = await supabase
+      .from('picks')
+      .select('*')
+      .eq('bracket_id', bracket.data.id)
+      .neq('user_id', user?.id)
+      .order('user_name', { ascending: true });
 
-  if (ap.error) {
-    console.error('Error loading all picks:', ap.error);
-    throw error(404, 'Not found');
+    if (ap.error) {
+      console.error('Error loading all picks:', ap.error);
+      throw error(404, 'Not found');
+    }
+
+    all_picks = ap.data;
   }
-  all_picks = ap.data;
 
   return {
     bracket: bracket.data,
     picks,
-    all_picks,
+    all_picks: all_picks || [],
   };
 };

@@ -7,5 +7,7 @@
 	};
 </script>
 
-<h1>{page.status}: {page.error?.message}</h1>
-<span>{emojis[page.status]}</span>
+<div class="space-y-4 p-4">
+	<h1>{page.status}: {page.error?.message}</h1>
+	<span>{emojis[page.status]}</span>
+</div>

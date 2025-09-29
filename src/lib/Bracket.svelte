@@ -162,7 +162,7 @@
 				spacing,
 				offset,
 				fits,
-				height: spacing * m + offset,
+				height: spacing * (m - 1) + offset + match_unit * 2,
 				matches: rm
 			};
 		});
