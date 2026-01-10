@@ -1,4 +1,5 @@
 <script>
+	import { tick } from 'svelte';
 	import Portal from './Portal.svelte';
 	import XIcon from '$lib/assets/icons/x.svg?component';
 
@@ -17,6 +18,19 @@
 
 	export const open = () => {
 		isOpen = true;
+	};
+
+	export const selectFirstInput = async () => {
+		await tick();
+		const modalElement = document.querySelector('.modal-container');
+		if (modalElement) {
+			const firstInput = modalElement.querySelector(
+				'input, select, textarea, button, [tabindex]:not([tabindex="-1"])'
+			);
+			if (firstInput) {
+				firstInput.focus();
+			}
+		}
 	};
 
 	export const isModalOpen = () => isOpen;

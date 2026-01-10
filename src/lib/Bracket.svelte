@@ -7,6 +7,7 @@
 	import XIconLarge from '$lib/assets/icons/x.svg?component';
 	import MatchScore from '$lib/MatchScore.svelte';
 	import EditIcon from '$lib/assets/icons/edit.svg?component';
+	import SearchInput from '$lib/SearchInput.svelte';
 	import {
 		getMatchCountByRound,
 		getMatchCountIndices,
@@ -14,6 +15,7 @@
 		getMatches,
 		bracketScore
 	} from '$lib/bracket-utils';
+	import { countries } from '$lib/countries';
 
 	let {
 		draw_size,
@@ -34,6 +36,12 @@
 
 	const col_width = 192;
 	const col_gap = 32;
+
+	let seed_entry_el: Modal;
+	let edit_seed_index = $state(-1);
+	let edit_seed_name = $state('');
+	let edit_seed_number = $state('');
+	let edit_seed_country = $state('');
 
 	let edit_result_el: Modal;
 	let first_col_container: HTMLDivElement;
@@ -317,6 +325,7 @@
 		edit_nickname_index = result[player];
 		nickname = '';
 		edit_nickname_el.open();
+		edit_nickname_el.selectFirstInput();
 	}
 
 	function updateNickname() {
@@ -369,26 +378,88 @@
 		edit_match_player_b = result.player_b;
 		edit_match_score = cloneDeep(result.score);
 		edit_result_el.open();
+		edit_result_el.selectFirstInput();
 	}
 
 	function defineResult() {
 		results[edit_match_index].score = edit_match_score;
 		results = results;
 	}
+
+	function defineSeedEntry(e: Event, seed_index: number) {
+		e.preventDefault();
+		const seed = seeds[seed_index];
+		if (!seed) return;
+
+		edit_seed_index = seed_index;
+		edit_seed_name = seed.name;
+		edit_seed_number = seed.seed ? String(seed.seed) : '';
+		edit_seed_country = seed.country || '';
+		seed_entry_el.open();
+		seed_entry_el.selectFirstInput();
+	}
+
+	function updateSeedEntry() {
+		const seed = seeds[edit_seed_index];
+		if (edit_seed_name?.trim() !== seed.name) {
+			seed.name = edit_seed_name.trim();
+		}
+
+		if (edit_seed_number && Number.isFinite(parseInt(edit_seed_number))) {
+			seed.seed = parseInt(edit_seed_number);
+		} else if (edit_seed_number) {
+			seed.seed = edit_seed_number;
+		} else {
+			seed.seed = null;
+		}
+
+		if (edit_seed_country !== seed.country) {
+			seed.country = edit_seed_country || null;
+		}
+
+		seeds = seeds;
+	}
+
+	function getFlagEmoji(countryCode: string) {
+		if (countryCode === 'LGBT') return '🏳️‍🌈';
+		if (countryCode === 'UN') return '🇺🇳';
+		if (countryCode === 'EU') return '🇪🇺';
+		if (countryCode === 'GB-ENG') return '🏴󠁧󠁢󠁥󠁮󠁧󠁿';
+		if (countryCode === 'GB-NIR') return '🇬🇧';
+		if (countryCode === 'GB-SCT') return '🏴󠁧󠁢󠁳󠁣󠁴󠁿';
+		if (countryCode === 'GB-WLS') return '🏴󠁧󠁢󠁷󠁬󠁳󠁿';
+		if (countryCode === 'US-CA') return '🇺🇸';
+
+		const codePoints = countryCode
+			.toUpperCase()
+			.split('')
+			.map((char) => 127397 + char.charCodeAt());
+		return String.fromCodePoint(...codePoints);
+	}
 </script>
 
 {#snippet seed_input(index: number)}
-	<div class="flex h-full w-full gap-1" class:bg-amber-200={active_seed === index}>
-		<input
-			type="text"
-			class="min-w-0 grow border-0 px-1 outline-0"
-			placeholder="--"
-			value={seeds[index]?.name}
-			onkeydown={doNotSubmit}
-			oninput={(e) => updateSeed(e, index)}
-			onfocus={() => (active_seed = index)}
-			onblur={() => (active_seed = null)}
-		/>
+	<div class="flex h-full w-full overflow-hidden" class:bg-amber-200={active_seed === index}>
+		<div class="flex grow">
+			{#if seeds[index]?.country}
+				{@const seed = seeds[index]}
+				<div class="flex-none">
+					<img src={`/flags/${seed.country}.svg`} alt={seed.country} class="h-4 w-6 px-1" />
+				</div>
+			{/if}
+			<div class="grow">
+				<input
+					type="text"
+					class="min-w-0 grow border-0 px-1 outline-0"
+					placeholder="--"
+					value={seeds[index]?.name}
+					onkeydown={doNotSubmit}
+					oninput={(e) => updateSeed(e, index)}
+					onfocus={() => (active_seed = index)}
+					onblur={() => (active_seed = null)}
+				/>
+			</div>
+		</div>
 		{#if seeds[index]}
 			<input
 				class="w-6 min-w-0 flex-none border-0 px-1 text-right outline-0"
@@ -400,6 +471,11 @@
 				onfocus={() => (active_seed = index)}
 				onblur={() => (active_seed = null)}
 			/>
+		{/if}
+		{#if seeds[index]?.name}
+			<button class="edit-button flex-none" tabindex="-1" onclick={(e) => defineSeedEntry(e, index)}
+				><EditIcon /></button
+			>
 		{/if}
 	</div>
 {/snippet}
@@ -418,6 +494,11 @@
 				class="flex h-full w-full items-center overflow-hidden text-left hover:bg-teal-200"
 				onclick={() => defineWinner(match_index, player)}
 			>
+				{#if seed?.country}
+					<div>
+						<img src={`/flags/${seed.country}.svg`} alt={seed.country} class="h-4 w-6 px-1" />
+					</div>
+				{/if}
 				<div class="truncate px-1">{seed?.name}</div>
 				{#if seed?.seed != undefined}
 					<div class="px-1 text-gray-400 italic">
@@ -437,7 +518,12 @@
 		{:else}
 			<div class="flex grow justify-between overflow-hidden">
 				<div class="flex grow overflow-hidden">
-					<div class="truncate px-1" class:font-bold={is_winner}>
+					{#if seed?.country}
+						<div>
+							<img src={`/flags/${seed.country}.svg`} alt={seed.country} class="h-4 w-6 px-1" />
+						</div>
+					{/if}
+					<div class="truncate px-1" class:font-bold={is_winner} class:text-gray-500={!is_winner}>
 						{seed?.name}
 					</div>
 					{#if seed?.seed != undefined}
@@ -485,14 +571,26 @@
 	<div class="relative flex h-full w-full items-center justify-between overflow-hidden">
 		{#if pickable && pick_seed && pick && pick.winner == null}
 			<div
-				class="match-container flex h-full w-full items-center justify-between gap-1 hover:bg-teal-200"
+				class="match-container flex h-full w-full items-center justify-between hover:bg-teal-200"
 			>
 				<button
-					class="flex grow gap-1 truncate px-1 text-left"
+					class="flex grow justify-between overflow-hidden text-left"
 					onclick={() => pickWinner(match_index, player)}
 				>
-					<div class="truncate">
-						{nickname ? nickname : pick_seed?.name}
+					<div class="flex shrink grow items-center overflow-hidden">
+						{#if pick_seed?.country}
+							<div class="flex-none">
+								<img
+									src={`/flags/${pick_seed.country}.svg`}
+									alt={pick_seed.country}
+									class="h-4 w-6 px-1"
+								/>
+							</div>
+						{/if}
+
+						<div class="grow truncate">
+							{nickname ? nickname : pick_seed?.name}
+						</div>
 					</div>
 
 					{#if pick_seed?.seed != undefined}
@@ -521,26 +619,43 @@
 			</div>
 		{:else}
 			<div class="flex grow justify-between overflow-hidden">
-				<div class="grow truncate px-1" class:font-bold={is_pick_winner}>
-					{nickname ? nickname : pick_seed?.name}
+				<div class="flex shrink grow items-center overflow-hidden">
+					{#if pick_seed?.country}
+						<div class="flex-none">
+							<img
+								src={`/flags/${pick_seed.country}.svg`}
+								alt={pick_seed.country}
+								class="h-4 w-6 px-1"
+							/>
+						</div>
+					{/if}
+					<div
+						class="grow truncate"
+						class:font-bold={is_pick_winner}
+						class:text-gray-500={!is_pick_winner}
+					>
+						{nickname ? nickname : pick_seed?.name}
+					</div>
 				</div>
 				{#if pick_seed?.seed != undefined}
-					<div class="flex-none text-gray-400 italic">
+					<div class="flex-none px-1 text-gray-400 italic">
 						{pick_seed.seed}
 					</div>
 				{/if}
 			</div>
-			<div class="flex w-4 flex-none items-center justify-center text-right">
-				{#if player === 'player_a' && is_pick_correct}
-					<div class="text-green-500">
-						<CircleCheckIcon />
-					</div>
-				{:else if player === 'player_a' && is_pick_incorrect}
-					<div class="text-red-500">
-						<CircleXIcon />
-					</div>
-				{/if}
-			</div>
+			{#if !pickable && result?.winner != null}
+				<div class="flex w-4 flex-none items-center justify-center text-right">
+					{#if player === 'player_a' && is_pick_correct}
+						<div class="text-green-500">
+							<CircleCheckIcon />
+						</div>
+					{:else if player === 'player_a' && is_pick_incorrect}
+						<div class="text-red-500">
+							<CircleXIcon />
+						</div>
+					{/if}
+				</div>
+			{/if}
 		{/if}
 	</div>
 {/snippet}
@@ -639,7 +754,18 @@
 				class="overall-winner-container relative top-28 z-50 min-w-36 border border-gray-400 bg-white p-4 shadow-lg"
 			>
 				<div class="text-lg text-gray-400 italic">Champion:</div>
-				<div class="text-3xl font-bold">{overall_winner_nickname || overall_winner?.name}</div>
+				<div class="flex items-center gap-2">
+					{#if overall_winner?.country}
+						<div>
+							<img
+								src={`/flags/${overall_winner.country}.svg`}
+								alt={overall_winner.country}
+								class="h-6 w-8 px-1"
+							/>
+						</div>
+					{/if}
+					<div class="text-3xl font-bold">{overall_winner_nickname || overall_winner?.name}</div>
+				</div>
 				{#if pickable && mode === 'user-picks'}
 					<button
 						class="undo-winner-button absolute top-0 right-0 rounded p-1 text-gray-400 hover:text-black"
@@ -665,6 +791,35 @@
 		</div>
 	{/if}
 </div>
+
+<Modal
+	bind:this={seed_entry_el}
+	closeable
+	buttons={[
+		{ label: 'Cancel', type: 'cancel' },
+		{ label: 'Update', type: 'confirm', style: 'primary' }
+	]}
+	confirm={updateSeedEntry}
+>
+	<div slot="title">Edit Entry</div>
+	<div slot="content" class="space-y-4">
+		<input
+			type="text"
+			name="name"
+			placeholder="Enter name"
+			class="w-full rounded border border-gray-300 p-1"
+			bind:value={edit_seed_name}
+		/>
+		<input
+			type="text"
+			name="seed"
+			placeholder="Seed"
+			class="w-full rounded border border-gray-300 p-1"
+			bind:value={edit_seed_number}
+		/>
+		<SearchInput bind:value={edit_seed_country} options={countries} placeholder="Country" />
+	</div>
+</Modal>
 
 <Modal
 	bind:this={edit_result_el}

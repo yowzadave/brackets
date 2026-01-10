@@ -16,26 +16,33 @@
 
 <form method="POST" action="?/create_bracket" class="flex grow flex-col">
 	<div class="flex justify-between p-4">
-		<div>
+		<div class="space-y-2">
 			<div class="text-sm">
-				<label class="flex">
+				<label class="flex items-center">
 					<div class="w-24 flex-none text-gray-400 italic">Name:</div>
 					<div class="px-1">
-						<input name="name" type="text" bind:value={name} />
+						<input
+							class="rounded-lg border border-gray-300 px-2 py-1"
+							name="name"
+							type="text"
+							bind:value={name}
+						/>
 					</div>
 				</label>
 			</div>
 			<div class="text-sm">
 				<label class="flex">
 					<div class="w-24 flex-none text-gray-400 italic">Draw Size:</div>
-					<select name="draw_size" bind:value={draw_size} onchange={resizeSeeds}>
-						<option value={4}>4</option>
-						<option value={8}>8</option>
-						<option value={16}>16</option>
-						<option value={32}>32</option>
-						<option value={64}>64</option>
-						<option value={128}>128</option>
-					</select>
+					<div class="px-1">
+						<select name="draw_size" bind:value={draw_size} onchange={resizeSeeds}>
+							<option value={4}>4</option>
+							<option value={8}>8</option>
+							<option value={16}>16</option>
+							<option value={32}>32</option>
+							<option value={64}>64</option>
+							<option value={128}>128</option>
+						</select>
+					</div>
 				</label>
 			</div>
 		</div>
