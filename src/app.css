@@ -19,7 +19,7 @@ h2 {
 }
 
 .btn {
-  @apply font-bold py-1 px-4 rounded-lg text-sm border border-black;
+  @apply font-bold py-2 px-4 rounded-lg text-sm border border-black;
 }
 
 .btn:disabled {
@@ -27,12 +27,16 @@ h2 {
 }
 
 .btn.btn-primary {
-  @apply bg-black text-white;
+  @apply bg-zinc-700 text-white;
   border-color: transparent;
+
+  &:hover {
+    @apply bg-zinc-800;
+  }
 }
 
 .btn-primary-dark {
-  @apply bg-orange-600 text-white;
+  @apply bg-orange-600 text-white py-1;
   @apply border-orange-700;
 
   &:hover {

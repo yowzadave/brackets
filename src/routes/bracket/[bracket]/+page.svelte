@@ -248,7 +248,7 @@
 				<button class="btn-text" onclick={confirmLock}>Lock Bracket</button>
 			</div>
 		{:else if view_mode === 'user-picks'}
-			{#if all_picks.length && !bracket.pickable}
+			{#if all_picks.length && !bracket.pickable && user && picks}
 				<div class="absolute top-24 right-4 text-sm text-gray-800">
 					<select name="current_pick" class="w-48" bind:value={current_pick}>
 						{#if user && picks}
