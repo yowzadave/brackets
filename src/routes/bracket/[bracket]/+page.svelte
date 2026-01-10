@@ -2,6 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import Modal from '$lib/Modal.svelte';
 	import Bracket from '$lib/Bracket.svelte';
+	import Portal from '$lib/Portal.svelte';
 	import totalMatches from '$lib/total-matches';
 	import { alerts } from '$lib/stores/alerts';
 	import { bracketScore } from '$lib/bracket-utils';
@@ -71,6 +72,7 @@
 			const s = await supabase.auth.signInAnonymously();
 			if (s.error) {
 				alerts.add({ type: 'error', message: 'Error saving picks' });
+				console.log('Error signing in anonymously:', s.error);
 				return;
 			}
 		}
@@ -93,6 +95,7 @@
 				alerts.add({ type: 'ok', message: 'Picks saved', timeout: 2500 });
 			} else {
 				alerts.add({ type: 'error', message: 'Error saving picks' });
+				console.log('Error saving picks:', data.error);
 			}
 		} else {
 			const saved = await fetch(`/picks/${picks.id}`, {
@@ -105,6 +108,7 @@
 				alerts.add({ type: 'ok', message: 'Picks saved', timeout: 2500 });
 			} else {
 				alerts.add({ type: 'error', message: 'Error saving picks' });
+				console.log('Error updating picks:', data.error);
 			}
 		}
 	}
@@ -149,64 +153,52 @@
 </script>
 
 <div class="flex grow flex-col">
-	<div class="p-4">
-		<div class="flex items-center justify-between space-y-4">
+	<div>
+		<div class="flex items-center justify-between bg-zinc-700">
 			<div>
-				<h1 class="mb-2">{bracket.name}</h1>
 				{#if bracket.pickable}
-					<div class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
+					<div class="px-4 py-2 text-sm">
 						<input
 							type="text"
 							bind:value={user_name}
 							placeholder="Enter your name"
-							class="w-40 rounded border border-gray-200 bg-gray-100 px-1 py-0.5"
+							class="w-40 rounded border border-gray-200 bg-zinc-200 px-1 py-0.5"
 						/>
 					</div>
 				{:else}
-					<div class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
-						<div class="flex items-center gap-2">
-							<label class="flex gap-2">
-								<div class="text-gray-400 italic">User Picks</div>
-								<input type="radio" bind:group={view_mode} value="user-picks" />
-							</label>
-							<select name="current_pick" class="w-48" bind:value={current_pick}>
-								{#if user && picks}
-									<option value={picks.id}>{picks.user_name}</option>
-								{/if}
-								{#each all_picks as p}
-									<option value={p.id}>{p.user_name || '<Anonymous>'}</option>
-								{/each}
-							</select>
-						</div>
-						<div class="flex gap-4">
-							<label class="flex gap-2">
-								<div class="text-gray-400 italic">Actual Results</div>
-								<input type="radio" bind:group={view_mode} value="view-actual" />
-							</label>
-						</div>
-						<div class="flex gap-4">
-							<label class="flex gap-2">
-								<div class="text-gray-400 italic">All Scores</div>
-								<input type="radio" bind:group={view_mode} value="all-scores" />
-							</label>
-						</div>
+					<div class="flex items-center gap-2 text-sm">
+						<button
+							class="nav-tab"
+							class:selected={view_mode === 'user-picks'}
+							onclick={() => (view_mode = 'user-picks')}
+						>
+							User Picks
+						</button>
+						<button
+							class="nav-tab"
+							class:selected={view_mode === 'view-actual'}
+							onclick={() => (view_mode = 'view-actual')}
+						>
+							Actual Results
+						</button>
+						<button
+							class="nav-tab"
+							class:selected={view_mode === 'all-scores'}
+							onclick={() => (view_mode = 'all-scores')}
+						>
+							All Scores
+						</button>
 					</div>
 				{/if}
 			</div>
-			<div>
+			<div class="px-4">
 				{#if bracket.pickable}
-					<button class="btn btn-primary" onclick={savePicks}> Save&nbsp;Picks </button>
+					<button class="btn btn-primary-dark" onclick={savePicks}> Save&nbsp;Picks </button>
 				{:else if my_bracket && view_mode === 'view-actual'}
-					<button class="btn btn-primary" onclick={saveResults}> Save&nbsp;Results </button>
+					<button class="btn btn-primary-dark" onclick={saveResults}> Save&nbsp;Results </button>
 				{/if}
 			</div>
 		</div>
-		{#if my_bracket && bracket.pickable}
-			<div class="flex gap-2 text-sm">
-				<div>Bracket is currently open for picks.</div>
-				<button class="btn-text" onclick={confirmLock}>Lock Bracket</button>
-			</div>
-		{/if}
 	</div>
 
 	{#if view_mode === 'all-scores'}
@@ -216,9 +208,9 @@
 					{#each scores as score}
 						{@const mine = picks && picks.id === score.id}
 						<tr>
-							<td>
+							<td class="text-sm">
 								{#if mine}
-									*
+									•
 								{/if}
 							</td>
 							<td
@@ -250,6 +242,27 @@
 			{viewed_picks}
 			{viewed_nicknames}
 		/>
+		{#if my_bracket && bracket.pickable}
+			<div class="absolute top-24 right-4 text-right text-sm text-gray-500">
+				<div>Bracket is currently open for picks.</div>
+				<button class="btn-text" onclick={confirmLock}>Lock Bracket</button>
+			</div>
+		{:else if view_mode === 'user-picks'}
+			{#if all_picks.length && !bracket.pickable}
+				<div class="absolute top-24 right-4 text-sm text-gray-800">
+					<select name="current_pick" class="w-48" bind:value={current_pick}>
+						{#if user && picks}
+							<option value={picks.id}>{picks.user_name}</option>
+						{/if}
+						{#each all_picks as p}
+							<option value={p.id}>{p.user_name || '<Anonymous>'}</option>
+						{/each}
+					</select>
+				</div>
+			{:else if !bracket.pickable}
+				<div class="absolute top-24 right-4 text-sm text-gray-500 italic">Bracket is locked.</div>
+			{/if}
+		{/if}
 	{/if}
 </div>
 
@@ -268,3 +281,25 @@
 		<p>Users will no longer be able to update their picks.</p>
 	</div>
 </Modal>
+
+<Portal target="#title-container">
+	<div class="text-lg font-bold text-gray-300">
+		{bracket?.name}
+	</div>
+</Portal>
+
+<style>
+	@reference "tailwindcss";
+
+	.nav-tab {
+		@apply cursor-pointer border-b-2 border-transparent px-4 py-2 text-gray-400;
+	}
+
+	.nav-tab.selected {
+		@apply border-b-2 border-orange-400 text-orange-400;
+	}
+
+	.nav-tab:hover:not(.selected) {
+		@apply text-white;
+	}
+</style>

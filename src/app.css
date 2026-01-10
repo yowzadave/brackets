@@ -19,7 +19,7 @@ h2 {
 }
 
 .btn {
-  @apply font-bold py-2 px-4 rounded text-sm border border-black;
+  @apply font-bold py-1 px-4 rounded-lg text-sm border border-black;
 }
 
 .btn:disabled {
@@ -29,6 +29,15 @@ h2 {
 .btn.btn-primary {
   @apply bg-black text-white;
   border-color: transparent;
+}
+
+.btn-primary-dark {
+  @apply bg-orange-600 text-white;
+  @apply border-orange-700;
+
+  &:hover {
+    @apply bg-orange-700 border-orange-800;
+  }
 }
 
 .btn.btn-danger {

@@ -7,8 +7,11 @@
 	let show_menu = $state(false);
 </script>
 
-<div class="flex items-center justify-between bg-black px-4 py-2 text-sm text-gray-200">
-	<a href="/"><div class="font-bold">BKTS</div></a>
+<div class="flex items-center justify-between bg-zinc-700 px-4 py-2 text-sm text-gray-200">
+	<div class="flex items-center gap-8">
+		<a href="/"><div class="text-lg font-bold">BKTS</div></a>
+		<div id="title-container"></div>
+	</div>
 	<div class="text-xs">
 		{#if user}
 			<div class="relative" use:clickOutside onoutclick={() => (show_menu = false)}>

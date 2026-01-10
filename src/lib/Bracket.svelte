@@ -802,7 +802,7 @@
 	confirm={updateSeedEntry}
 >
 	<div slot="title">Edit Entry</div>
-	<div slot="content" class="space-y-4">
+	<div slot="content" class="space-y-2">
 		<input
 			type="text"
 			name="name"
@@ -831,7 +831,7 @@
 	confirm={defineResult}
 >
 	<div slot="title">Edit Match Score</div>
-	<div slot="content" class="space-y-4">
+	<div slot="content" class="space-y-2">
 		<MatchScore
 			player_a={seeds[edit_match_player_a]}
 			player_b={seeds[edit_match_player_b]}
@@ -850,7 +850,7 @@
 	confirm={updateNickname}
 >
 	<div slot="title">Edit Nickname</div>
-	<div slot="content" class="space-y-4">
+	<div slot="content" class="space-y-2">
 		{@const seed = seeds[edit_nickname_index]}
 		<div class="flex items-center">
 			<div class="w-24 flex-none text-gray-400 italic">Name</div>

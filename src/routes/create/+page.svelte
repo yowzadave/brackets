@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Bracket from '$lib/Bracket.svelte';
 
-	let name = $state('Bracket Name');
+	let name = $state('');
 	let draw_size = $state(128);
 	let seeds = $state(Array(128).fill(null));
 
@@ -15,39 +15,37 @@
 </script>
 
 <form method="POST" action="?/create_bracket" class="flex grow flex-col">
-	<div class="flex justify-between p-4">
-		<div class="space-y-2">
+	<div class="flex items-center justify-between bg-zinc-700">
+		<div class="flex items-center gap-2 px-4 py-2">
 			<div class="text-sm">
-				<label class="flex items-center">
-					<div class="w-24 flex-none text-gray-400 italic">Name:</div>
-					<div class="px-1">
-						<input
-							class="rounded-lg border border-gray-300 px-2 py-1"
-							name="name"
-							type="text"
-							bind:value={name}
-						/>
-					</div>
-				</label>
+				<input
+					class="w-40 rounded border border-gray-200 bg-zinc-200 px-1 py-0.5"
+					placeholder="Bracket Name"
+					name="name"
+					type="text"
+					bind:value={name}
+				/>
 			</div>
 			<div class="text-sm">
-				<label class="flex">
-					<div class="w-24 flex-none text-gray-400 italic">Draw Size:</div>
-					<div class="px-1">
-						<select name="draw_size" bind:value={draw_size} onchange={resizeSeeds}>
-							<option value={4}>4</option>
-							<option value={8}>8</option>
-							<option value={16}>16</option>
-							<option value={32}>32</option>
-							<option value={64}>64</option>
-							<option value={128}>128</option>
-						</select>
-					</div>
-				</label>
+				<select
+					class="rounded border border-gray-200 bg-zinc-200 px-1 py-0.5"
+					name="draw_size"
+					bind:value={draw_size}
+					onchange={resizeSeeds}
+				>
+					<option value={4}>Draw Size: 4</option>
+					<option value={8}>Draw Size: 8</option>
+					<option value={16}>Draw Size: 16</option>
+					<option value={32}>Draw Size: 32</option>
+					<option value={64}>Draw Size: 64</option>
+					<option value={128}>Draw Size: 128</option>
+				</select>
 			</div>
 		</div>
 		<input type="hidden" name="seeds" value={JSON.stringify(seeds)} />
-		<button type="submit" class="btn btn-primary">Create Bracket</button>
+		<div class="px-4 py-2">
+			<button type="submit" class="btn btn-primary-dark">Create Bracket</button>
+		</div>
 	</div>
 	<Bracket bind:seeds {draw_size} mode="create" />
 </form>

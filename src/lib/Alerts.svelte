@@ -31,7 +31,7 @@
 </script>
 
 <div
-	class="pointer-events-none absolute z-50 flex h-full w-full flex-col items-center space-y-2 pt-16 text-sm"
+	class="pointer-events-none absolute z-50 flex h-full w-full flex-col items-center space-y-2 pt-10 text-sm"
 >
 	{#each $alerts as alert (alert.id)}
 		<div
