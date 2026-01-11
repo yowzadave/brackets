@@ -261,7 +261,7 @@
 					</select>
 				</div>
 			{:else if !bracket.pickable}
-				<div class="absolute top-24 right-4 text-sm text-gray-500 italic">Bracket is locked.</div>
+				<div class="absolute top-32 right-4 text-sm text-gray-500 italic">Bracket is locked.</div>
 			{/if}
 		{/if}
 	{/if}

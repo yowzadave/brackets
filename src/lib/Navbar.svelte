@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Popover from '$lib/Popover.svelte';
+	import BracketIcon from '$lib/assets/icons/bracket.svg?component';
 	import { clickOutside } from '$lib/utilities/click-outside';
 	import ExitIcon from '$lib/assets/icons/exit.svg?component';
 	import ProfileIcon from '$lib/assets/icons/profile.svg?component';
@@ -11,7 +12,10 @@
 
 <div class="flex items-center justify-between bg-zinc-700 px-4 py-2 text-sm text-gray-200">
 	<div class="flex items-center gap-8">
-		<a href="/"><div class="text-lg font-bold">BKTS</div></a>
+		<a href="/" class="flex items-center gap-1">
+			<BracketIcon />
+			<div class="text-lg font-bold">BKTS</div>
+		</a>
 		<div id="title-container"></div>
 	</div>
 	<div class="text-xs">
