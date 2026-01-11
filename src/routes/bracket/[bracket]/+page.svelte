@@ -161,6 +161,7 @@
 						<input
 							type="text"
 							bind:value={user_name}
+							autocomplete="off"
 							placeholder="Enter your name"
 							class="w-40 rounded border border-gray-200 bg-zinc-200 px-1 py-0.5"
 						/>
@@ -243,13 +244,13 @@
 			{viewed_nicknames}
 		/>
 		{#if my_bracket && bracket.pickable}
-			<div class="absolute top-24 right-4 text-right text-sm text-gray-500">
+			<div class="absolute top-32 right-4 text-right text-sm text-gray-500">
 				<div>Bracket is currently open for picks.</div>
 				<button class="btn-text" onclick={confirmLock}>Lock Bracket</button>
 			</div>
 		{:else if view_mode === 'user-picks'}
 			{#if all_picks.length && !bracket.pickable && user && picks}
-				<div class="absolute top-24 right-4 text-sm text-gray-800">
+				<div class="absolute top-32 right-4 text-sm text-gray-800">
 					<select name="current_pick" class="w-48" bind:value={current_pick}>
 						{#if user && picks}
 							<option value={picks.id}>{picks.user_name}</option>

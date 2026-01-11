@@ -4,8 +4,8 @@
 
 	let { container, z = 210, width = null, align = 'left', fit = false } = $props();
 
-	let el;
-	let parent;
+	let el = $state();
+	let parent = $state();
 	let ticking = $state(false);
 	let bbox = $state(null);
 
