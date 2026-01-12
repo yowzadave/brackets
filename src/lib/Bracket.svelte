@@ -508,7 +508,7 @@
 			</button>
 			{#if match.round !== 0}
 				<div
-					class="edit-button flex w-3 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
+					class="flex w-3 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
 				>
 					<button onclick={() => undoResult(match_index, player)}>
 						<XIcon />
@@ -609,7 +609,7 @@
 					</div>
 				{:else}
 					<div
-						class="edit-button flex w-4 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
+						class="flex w-4 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
 					>
 						<button onclick={() => unpickWinner(match_index, player)}>
 							<XIcon />
