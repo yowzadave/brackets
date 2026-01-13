@@ -3,7 +3,7 @@
 	import { invalidate } from '$app/navigation';
 
 	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
+	import favicon from '$lib/assets/favicon.ico';
 	import Navbar from '$lib/Navbar.svelte';
 	import Alerts from '$lib/Alerts.svelte';
 

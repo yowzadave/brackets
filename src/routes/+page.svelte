@@ -17,6 +17,14 @@
 		<a href="/auth" class="homepage-link"> Log In </a>
 	</div>
 {:else}
+	{#if user.is_anonymous}
+		<div class="px-4 pt-4 text-sm text-gray-500">
+			<p>
+				<a href="/auth/link-email" class="btn-text">Link this account to your email address</a>
+				to allow logging in from other devices and recovering your brackets.
+			</p>
+		</div>
+	{/if}
 	<div class="space-y-4 p-4">
 		{#if picks_not_mine.length}
 			<div>
@@ -24,7 +32,9 @@
 				<div>
 					{#each picks_not_mine as pick}
 						<div>
-							<a href={`/bracket/${pick.bracket_id}`} class="btn-text">{pick.bracket.name}</a>
+							<a href={`/bracket/${pick.bracket.slug || pick.bracket_id}`} class="btn-text"
+								>{pick.bracket.name}</a
+							>
 						</div>
 					{/each}
 				</div>
@@ -37,7 +47,7 @@
 				<div>
 					{#each brackets as bracket}
 						<div>
-							<a href={`/bracket/${bracket.id}`} class="btn-text">{bracket.name}</a>
+							<a href={`/bracket/${bracket.slug || bracket.id}`} class="btn-text">{bracket.name}</a>
 						</div>
 					{/each}
 				</div>
