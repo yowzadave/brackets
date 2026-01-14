@@ -18,10 +18,11 @@
 	</div>
 {:else}
 	{#if user.is_anonymous}
-		<div class="px-4 pt-4 text-sm text-gray-500">
+		<div class="space-y-2 px-4 pt-4 text-sm text-gray-500">
+			<p>You are currently logged in anonymously.</p>
 			<p>
-				<a href="/auth/link-email" class="btn-text">Link this account to your email address</a>
-				to allow logging in from other devices and recovering your brackets.
+				<a href="/auth/link-email" class="btn-text">Link your email address</a>
+				to allow logging in from other devices.
 			</p>
 		</div>
 	{/if}

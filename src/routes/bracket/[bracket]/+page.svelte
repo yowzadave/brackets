@@ -263,7 +263,7 @@
 						{/each}
 					</select>
 					{#if bracket.pickable}
-						<div class="p-2 text-right text-sm text-gray-500">Bracket is open.</div>
+						<div class="p-2 text-right text-sm text-gray-500 italic">Bracket is open.</div>
 					{/if}
 				</div>
 			{:else if !bracket.pickable}
@@ -301,16 +301,15 @@
 >
 	<div slot="content" class="space-y-4">
 		<p>Your picks have been saved! You are free to edit and re-save until the bracket is locked.</p>
-		<p>
-			You can return to this page to view your results and see how your picks stacked up against
-			others.
-		</p>
+		<p>You can return to this page to view your results.</p>
 		{#if !user || user.is_anonymous}
 			<p>
-				If you want to log in from another device or recover your picks later, <a
-					href="/auth/link-email"
-					class="btn-text">link your account to an email address</a
+				If you want to log in from another device, <a href="/auth/link-email" class="btn-text"
+					>link your account to an email address</a
 				>.
+			</p>
+			<p>
+				View all your brackets at the <a href="/" class="btn-text">home page</a>.
 			</p>
 		{/if}
 	</div>
