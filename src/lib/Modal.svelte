@@ -10,6 +10,7 @@
 		closeOnOutclick = false,
 		buttons = [],
 		width = '24rem',
+		mode = 'dialog',
 		height = null,
 		confirm = () => {}
 	} = $props();
@@ -65,26 +66,34 @@
 			on:mousedown|stopPropagation
 		>
 			<div
-				class="relative flex max-h-full flex-col overflow-hidden rounded bg-white text-sm shadow-lg"
+				class="relative flex max-h-full flex-col overflow-hidden bg-white text-sm shadow-lg"
+				class:rounded={mode === 'dialog'}
+				class:rounded-xl={mode === 'info'}
 				style={containerStyles}
 				on:click|stopPropagation
 			>
-				<div class="w-full flex-none border-b border-gray-300 px-4 py-2 text-gray-500">
-					{#if closeable}
-						<div class="flex items-center justify-between">
-							<div>
-								<slot name="title" />
+				{#if mode === 'dialog'}
+					<div class="w-full flex-none border-b border-gray-300 px-4 py-2 text-gray-500">
+						{#if closeable}
+							<div class="flex items-center justify-between">
+								<div>
+									<slot name="title" />
+								</div>
+								<div class="cursor-pointer rounded p-1 hover:bg-gray-100" on:click={close}>
+									<XIcon />
+								</div>
 							</div>
-							<div class="cursor-pointer rounded p-1 hover:bg-gray-100" on:click={close}>
-								<XIcon />
-							</div>
-						</div>
-					{:else}
-						<slot name="title" />
-					{/if}
-				</div>
+						{:else}
+							<slot name="title" />
+						{/if}
+					</div>
+				{/if}
 
-				<div class="flex w-full grow flex-col overflow-hidden text-left" class:p-4={!fullframe}>
+				<div
+					class="flex w-full grow flex-col overflow-hidden text-left"
+					class:p-4={!fullframe && mode === 'dialog'}
+					class:p-6={!fullframe && mode === 'info'}
+				>
 					<slot name="content" />
 				</div>
 
@@ -95,6 +104,7 @@
 								class="btn"
 								class:btn-danger-minimal={button.style === 'danger'}
 								class:btn-primary={button.style === 'primary'}
+								class:btn-primary-alt={button.style === 'primary-alt'}
 								class:cursor-not-allowed={button.disabled}
 								class:opacity-50={button.disabled}
 								disabled={button.disabled}

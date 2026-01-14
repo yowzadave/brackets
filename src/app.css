@@ -27,11 +27,19 @@ h2 {
 }
 
 .btn.btn-primary {
-  @apply bg-zinc-700 text-white;
+  @apply bg-zinc-800 text-white;
   border-color: transparent;
 
   &:hover {
     @apply bg-zinc-800;
+  }
+}
+
+.btn.btn-primary-alt {
+  @apply bg-blue-500 text-white border-blue-600;
+
+  &:hover {
+    @apply bg-blue-600;
   }
 }
 

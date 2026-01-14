@@ -17,6 +17,7 @@
 	let nicknames = $state(picks?.nicknames ?? []);
 	let my_bracket = $derived(user && bracket?.owner_id === user.id);
 	let user_name = $state(picks?.user_name);
+	let welcome_el: Modal;
 	let bracket_update_el: Modal;
 	let viewed_picks = $derived(getViewedPicks(current_pick, all_picks, picks));
 	let viewed_nicknames = $derived(getViewedNicknames(current_pick, all_picks, picks));
@@ -64,7 +65,7 @@
 
 	async function savePicks() {
 		if (!user_name || user_name.trim() === '') {
-			alerts.add({ type: 'error', message: 'Please enter a name!', timeout: 5000 });
+			alerts.add({ type: 'error', message: 'Please enter your name!', timeout: 5000 });
 			return;
 		}
 
@@ -92,7 +93,7 @@
 			if (data.ok) {
 				invalidateAll();
 				current_pick = data.data.id;
-				alerts.add({ type: 'ok', message: 'Picks saved', timeout: 2500 });
+				welcome_el.open();
 			} else {
 				alerts.add({ type: 'error', message: 'Error saving picks' });
 				console.log('Error saving picks:', data.error);
@@ -244,24 +245,33 @@
 			{viewed_nicknames}
 		/>
 		{#if my_bracket && bracket.pickable}
-			<div class="absolute top-32 right-4 text-right text-sm text-gray-500">
+			<div
+				class="absolute top-26 right-4 rounded-lg border border-gray-300 bg-white px-2 py-1 text-right text-sm text-gray-500"
+			>
 				<div>Bracket is currently open for picks.</div>
 				<button class="btn-text" onclick={confirmLock}>Lock Bracket</button>
 			</div>
 		{:else if view_mode === 'user-picks'}
-			{#if all_picks.length && !bracket.pickable && user && picks}
-				<div class="absolute top-32 right-4 text-sm text-gray-800">
-					<select name="current_pick" class="w-48" bind:value={current_pick}>
+			{#if all_picks.length && user && picks}
+				<div class="absolute top-26 right-4 text-sm text-gray-800">
+					<select name="current_pick" class="w-48 bg-white" bind:value={current_pick}>
 						{#if user && picks}
-							<option value={picks.id}>{picks.user_name}</option>
+							<option value={picks.id} class="font-bold">{picks.user_name}</option>
 						{/if}
 						{#each all_picks as p}
 							<option value={p.id}>{p.user_name || '<Anonymous>'}</option>
 						{/each}
 					</select>
+					{#if bracket.pickable}
+						<div class="p-2 text-right text-sm text-gray-500">Bracket is open.</div>
+					{/if}
 				</div>
 			{:else if !bracket.pickable}
-				<div class="absolute top-32 right-4 text-sm text-gray-500 italic">Bracket is locked.</div>
+				<div
+					class="absolute top-26 right-4 rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-500 italic"
+				>
+					Bracket is locked.
+				</div>
 			{/if}
 		{/if}
 	{/if}
@@ -280,6 +290,29 @@
 	<div slot="content" class="space-y-4">
 		<p>Are you sure you want to lock this bracket? This action cannot be reversed.</p>
 		<p>Users will no longer be able to update their picks.</p>
+	</div>
+</Modal>
+
+<Modal
+	bind:this={welcome_el}
+	mode="info"
+	closeable
+	buttons={[{ label: 'OK', type: 'confirm', style: 'primary-alt' }]}
+>
+	<div slot="content" class="space-y-4">
+		<p>Your picks have been saved! You are free to edit and re-save until the bracket is locked.</p>
+		<p>
+			You can return to this page to view your results and see how your picks stacked up against
+			others.
+		</p>
+		{#if !user || user.is_anonymous}
+			<p>
+				If you want to log in from another device or recover your picks later, <a
+					href="/auth/link-email"
+					class="btn-text">link your account to an email address</a
+				>.
+			</p>
+		{/if}
 	</div>
 </Modal>
 
