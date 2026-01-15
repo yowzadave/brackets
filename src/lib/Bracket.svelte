@@ -461,18 +461,21 @@
 </script>
 
 {#snippet seed_input(index: number)}
-	<div class="flex h-full w-full overflow-hidden" class:bg-amber-200={active_seed === index}>
-		<div class="flex grow">
+	<div
+		class="flex h-full w-full items-center overflow-hidden"
+		class:bg-amber-200={active_seed === index}
+	>
+		<div class="flex grow items-center gap-1 pl-0.5">
 			{#if seeds[index]?.country}
 				{@const seed = seeds[index]}
 				<div class="flex-none">
-					<img src={`/flags/${seed.country}.svg`} alt={seed.country} class="h-4 w-6 px-1" />
+					<img src={`/flags/${seed.country}.svg`} alt={seed.country} class="h-3.5 w-3.5" />
 				</div>
 			{/if}
 			<div class="grow">
 				<input
 					type="text"
-					class="min-w-0 grow border-0 px-1 outline-0"
+					class="min-w-0 grow border-0 outline-0"
 					placeholder="--"
 					value={seeds[index]?.name}
 					onkeydown={doNotSubmit}
@@ -502,13 +505,36 @@
 	</div>
 {/snippet}
 
+{#snippet result_entry(seed: Seed | null, is_winner: boolean | null = null)}
+	<div class="flex shrink grow items-center gap-1 overflow-hidden pl-0.5">
+		{#if seed?.country}
+			<div>
+				<img src={`/flags/${seed.country}.svg`} alt={seed.country} class="h-3.5 w-3.5" />
+			</div>
+		{/if}
+		<div
+			class="grow truncate"
+			class:font-bold={is_winner}
+			class:text-gray-500={is_winner != null && !is_winner}
+		>
+			{seed?.name}
+		</div>
+	</div>
+
+	{#if seed?.seed != undefined}
+		<div class="px-0.5 text-gray-400 italic">
+			{seed.seed}
+		</div>
+	{/if}
+{/snippet}
+
 {#snippet result_actual(match_index: number, player: 'player_a' | 'player_b')}
 	{@const match = matches[match_index]}
 	{@const result = results[match_index]}
 	{@const seed = result ? seeds[result[player] ?? -1] : null}
 	{@const is_winner = result && result.winner != null && result.winner === result[player]}
 	<div
-		class="relative flex h-full w-full items-center justify-between gap-1 overflow-hidden"
+		class="relative flex h-full w-full items-center justify-between overflow-hidden"
 		class:bg-teal-100={is_winner}
 	>
 		{#if editable && seed && result && result.winner == null}
@@ -516,17 +542,7 @@
 				class="flex h-full w-full items-center overflow-hidden text-left hover:bg-teal-200"
 				onclick={() => defineWinner(match_index, player)}
 			>
-				{#if seed?.country}
-					<div>
-						<img src={`/flags/${seed.country}.svg`} alt={seed.country} class="h-4 w-6 px-1" />
-					</div>
-				{/if}
-				<div class="truncate px-1">{seed?.name}</div>
-				{#if seed?.seed != undefined}
-					<div class="px-1 text-gray-400 italic">
-						{seed.seed}
-					</div>
-				{/if}
+				{@render result_entry(seed, is_winner)}
 			</button>
 			{#if match.round !== 0}
 				<div
@@ -540,19 +556,7 @@
 		{:else}
 			<div class="flex grow justify-between overflow-hidden">
 				<div class="flex grow overflow-hidden">
-					{#if seed?.country}
-						<div>
-							<img src={`/flags/${seed.country}.svg`} alt={seed.country} class="h-4 w-6 px-1" />
-						</div>
-					{/if}
-					<div class="truncate px-1" class:font-bold={is_winner} class:text-gray-500={!is_winner}>
-						{seed?.name}
-					</div>
-					{#if seed?.seed != undefined}
-						<div class="px-1 text-gray-400 italic">
-							{seed.seed}
-						</div>
-					{/if}
+					{@render result_entry(seed, is_winner)}
 				</div>
 				{#if result?.score && player === 'player_b'}
 					<div class="absolute right-4 bottom-0 flex gap-1.5" style="height: {match_unit - 2}px;">
@@ -569,13 +573,15 @@
 					</div>
 				{/if}
 			</div>
-			<div class="flex w-4 flex-none items-center justify-center text-right">
-				{#if player === 'player_a' && editable && result?.winner != null && result.player_a != null && result.player_b != null}
-					<button class="edit-button" onclick={() => defineResultModal(match_index)}>
-						<EditIcon />
-					</button>
-				{/if}
-			</div>
+			{#if editable}
+				<div class="flex w-4 flex-none items-center justify-center text-right">
+					{#if player === 'player_a' && editable && result?.winner != null && result.player_a != null && result.player_b != null}
+						<button class="edit-button" onclick={() => defineResultModal(match_index)}>
+							<EditIcon />
+						</button>
+					{/if}
+				</div>
+			{/if}
 		{/if}
 	</div>
 {/snippet}
@@ -585,10 +591,10 @@
 	nickname: string | null,
 	is_pick_winner: boolean | null = null
 )}
-	<div class="flex shrink grow items-center overflow-hidden">
+	<div class="flex shrink grow items-center gap-1 overflow-hidden pl-0.5">
 		{#if pick_seed?.country}
 			<div class="flex-none">
-				<img src={`/flags/${pick_seed.country}.svg`} alt={pick_seed.country} class="h-4 w-6 px-1" />
+				<img src={`/flags/${pick_seed.country}.svg`} alt={pick_seed.country} class="h-3.5 w-3.5" />
 			</div>
 		{/if}
 
@@ -602,7 +608,7 @@
 	</div>
 
 	{#if pick_seed?.seed != undefined}
-		<div class="text-gray-400 italic">
+		<div class="px-0.5 text-gray-400 italic">
 			{pick_seed.seed}
 		</div>
 	{/if}
@@ -637,7 +643,7 @@
 							<EditIcon />
 						</button>
 					</div>
-				{:else}
+				{:else if pick.winner == null}
 					<div
 						class="flex w-4 flex-none items-center justify-center text-right text-gray-500 hover:text-black"
 					>
@@ -793,7 +799,7 @@
 		</div>
 	{/if}
 
-	{#if mode === 'user-picks' && !pickable}
+	{#if mode === 'user-picks'}
 		<div class="absolute bottom-4 left-4 text-sm font-bold">
 			Total score: {bracket_score}
 		</div>

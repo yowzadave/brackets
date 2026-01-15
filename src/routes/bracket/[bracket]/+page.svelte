@@ -247,7 +247,7 @@
 			{viewed_nicknames}
 		/>
 		{#if view_mode === 'user-picks'}
-			{#if all_picks.length && user && picks}
+			{#if user && picks}
 				<div class="absolute top-26 right-4 text-sm text-gray-800">
 					<select name="current_pick" class="w-48 bg-white" bind:value={current_pick}>
 						{#if user && picks}

@@ -66,9 +66,7 @@
 			on:mousedown|stopPropagation
 		>
 			<div
-				class="relative flex max-h-full flex-col overflow-hidden bg-white text-sm shadow-lg"
-				class:rounded={mode === 'dialog'}
-				class:rounded-xl={mode === 'info'}
+				class="relative flex max-h-full flex-col overflow-hidden rounded-xl bg-white text-sm shadow-lg"
 				style={containerStyles}
 				on:click|stopPropagation
 			>
