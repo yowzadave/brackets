@@ -3,6 +3,7 @@
 	import cloneDeep from 'lodash/cloneDeep';
 	import CircleCheckIcon from '$lib/assets/icons/circle-check-filled.svg?component';
 	import CircleXIcon from '$lib/assets/icons/circle-x-filled.svg?component';
+	import TrophyIcon from '$lib/assets/icons/trophy.svg?component';
 	import XIcon from '$lib/assets/icons/x-sm.svg?component';
 	import XIconLarge from '$lib/assets/icons/x.svg?component';
 	import MatchScore from '$lib/MatchScore.svelte';
@@ -769,15 +770,9 @@
 			>
 				<div class="text-lg text-gray-400 italic">Champion:</div>
 				<div class="flex items-center gap-2">
-					{#if overall_winner?.country}
-						<div>
-							<img
-								src={`/flags/${overall_winner.country}.svg`}
-								alt={overall_winner.country}
-								class="h-6 w-8 px-1"
-							/>
-						</div>
-					{/if}
+					<div>
+						<TrophyIcon class="h-7 w-7 text-yellow-600" />
+					</div>
 					<div class="text-3xl font-bold">{overall_winner_nickname || overall_winner?.name}</div>
 				</div>
 				{#if pickable && mode === 'user-picks'}
@@ -800,8 +795,10 @@
 	{/if}
 
 	{#if mode === 'user-picks'}
-		<div class="absolute bottom-4 left-4 text-sm font-bold">
-			Total score: {bracket_score}
+		<div
+			class="absolute right-4 bottom-4 rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-500"
+		>
+			Total score: <span class="font-bold text-black">{bracket_score}</span>
 		</div>
 	{/if}
 </div>
