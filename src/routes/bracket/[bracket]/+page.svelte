@@ -246,14 +246,7 @@
 			{viewed_picks}
 			{viewed_nicknames}
 		/>
-		{#if my_bracket && bracket.pickable}
-			<div
-				class="absolute top-26 right-4 rounded-lg border border-gray-300 bg-white px-2 py-1 text-right text-sm text-gray-500"
-			>
-				<div>Bracket is currently open for picks.</div>
-				<button class="btn-text" onclick={confirmLock}>Lock Bracket</button>
-			</div>
-		{:else if view_mode === 'user-picks'}
+		{#if view_mode === 'user-picks'}
 			{#if all_picks.length && user && picks}
 				<div class="absolute top-26 right-4 text-sm text-gray-800">
 					<select name="current_pick" class="w-48 bg-white" bind:value={current_pick}>
@@ -265,7 +258,12 @@
 						{/each}
 					</select>
 					{#if bracket.pickable}
-						<div class="p-2 text-right text-sm text-gray-500 italic">Bracket is open.</div>
+						<div class="p-2 text-right text-sm text-gray-500 italic">
+							<div>Bracket is open.</div>
+							{#if my_bracket}
+								<button class="btn-text" onclick={confirmLock}>Lock Bracket</button>
+							{/if}
+						</div>
 					{/if}
 				</div>
 			{:else if !bracket.pickable}
