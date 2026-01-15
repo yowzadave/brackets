@@ -273,6 +273,14 @@
 					Bracket is locked.
 				</div>
 			{/if}
+			{#if !bracket.pickable}
+				{@const score = scores.find((s) => s.id === current_pick)?.score ?? 0}
+				<div
+					class="absolute right-4 bottom-4 rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-500"
+				>
+					Total score: <span class="font-bold text-black">{score}</span>
+				</div>
+			{/if}
 		{/if}
 	{/if}
 </div>

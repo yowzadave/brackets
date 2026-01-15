@@ -793,14 +793,6 @@
 			</div>
 		</div>
 	{/if}
-
-	{#if mode === 'user-picks'}
-		<div
-			class="absolute right-4 bottom-4 rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-500"
-		>
-			Total score: <span class="font-bold text-black">{bracket_score}</span>
-		</div>
-	{/if}
 </div>
 
 <Modal
