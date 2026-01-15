@@ -50,7 +50,6 @@
 						</a>
 						<form method="POST" action="/auth?/logout">
 							<button
-								onclick={handleFormSubmit}
 								type="submit"
 								class="flex w-full items-center gap-2 rounded p-1 hover:bg-gray-200"
 							>
