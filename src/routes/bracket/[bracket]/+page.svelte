@@ -235,7 +235,9 @@
 		<Bracket
 			draw_size={bracket.draw_size}
 			editable={my_bracket && !bracket.pickable}
-			pickable={bracket.pickable}
+			pickable={bracket.pickable &&
+				view_mode === 'user-picks' &&
+				(!user || picks?.id === current_pick)}
 			mode={view_mode}
 			seeds={bracket.seeds}
 			bind:results={bracket_results}

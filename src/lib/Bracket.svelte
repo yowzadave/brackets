@@ -93,6 +93,7 @@
 	type Seed = {
 		name: string;
 		seed: number | string | null;
+		country?: string | null;
 	};
 
 	function getWinner(results: Result[], picks: Result[], seeds: Seed[], mode: string) {
@@ -312,6 +313,9 @@
 			} else {
 				picks[child][p] = pick[player];
 			}
+
+			const loser = player === 'player_a' ? pick.player_b : pick.player_a;
+			unpickDescendants(child, loser);
 		}
 
 		picks = picks;
@@ -344,9 +348,27 @@
 		results = results;
 	}
 
+	function unpickDescendants(match_index: number, player_index: number) {
+		const pick = picks[match_index];
+		if (!pick) return;
+		if (pick.winner != null && pick.winner === player_index) {
+			const child = childMatch(match_index);
+			if (child != null) {
+				unpickDescendants(child, player_index);
+			}
+
+			pick.winner = null;
+		}
+
+		if (pick.player_a === player_index) pick.player_a = null;
+		if (pick.player_b === player_index) pick.player_b = null;
+	}
+
 	function unpickWinner(match_index: number, player: 'player_a' | 'player_b') {
 		const pick = picks[match_index];
-		pick[player] = null;
+		if (!pick) return;
+		const player_index = pick[player];
+		unpickDescendants(match_index, player_index);
 		const parent = parentMatch(match_index, player);
 		if (parent != null) {
 			const parent_pick = picks[parent];
@@ -558,6 +580,34 @@
 	</div>
 {/snippet}
 
+{#snippet pick_entry(
+	pick_seed: Seed | null,
+	nickname: string | null,
+	is_pick_winner: boolean | null = null
+)}
+	<div class="flex shrink grow items-center overflow-hidden">
+		{#if pick_seed?.country}
+			<div class="flex-none">
+				<img src={`/flags/${pick_seed.country}.svg`} alt={pick_seed.country} class="h-4 w-6 px-1" />
+			</div>
+		{/if}
+
+		<div
+			class="grow truncate"
+			class:font-bold={is_pick_winner}
+			class:text-gray-500={is_pick_winner != null && !is_pick_winner}
+		>
+			{nickname ? nickname : pick_seed?.name}
+		</div>
+	</div>
+
+	{#if pick_seed?.seed != undefined}
+		<div class="text-gray-400 italic">
+			{pick_seed.seed}
+		</div>
+	{/if}
+{/snippet}
+
 {#snippet user_pick(match_index: number, player: 'player_a' | 'player_b')}
 	{@const match = matches[match_index]}
 	{@const result = results[match_index]}
@@ -569,7 +619,7 @@
 	{@const is_pick_incorrect =
 		result?.winner != null && pick?.winner != null && pick.winner !== result.winner}
 	<div class="relative flex h-full w-full items-center justify-between overflow-hidden">
-		{#if pickable && pick_seed && pick && pick.winner == null}
+		{#if pickable && pick_seed && pick}
 			<div
 				class="match-container flex h-full w-full items-center justify-between hover:bg-teal-200"
 			>
@@ -577,27 +627,7 @@
 					class="flex grow justify-between overflow-hidden text-left"
 					onclick={() => pickWinner(match_index, player)}
 				>
-					<div class="flex shrink grow items-center overflow-hidden">
-						{#if pick_seed?.country}
-							<div class="flex-none">
-								<img
-									src={`/flags/${pick_seed.country}.svg`}
-									alt={pick_seed.country}
-									class="h-4 w-6 px-1"
-								/>
-							</div>
-						{/if}
-
-						<div class="grow truncate">
-							{nickname ? nickname : pick_seed?.name}
-						</div>
-					</div>
-
-					{#if pick_seed?.seed != undefined}
-						<div class="text-gray-400 italic">
-							{pick_seed.seed}
-						</div>
-					{/if}
+					{@render pick_entry(pick_seed, nickname, is_pick_winner)}
 				</button>
 				{#if match.round === 0}
 					<div
@@ -619,29 +649,7 @@
 			</div>
 		{:else}
 			<div class="flex grow justify-between overflow-hidden">
-				<div class="flex shrink grow items-center overflow-hidden">
-					{#if pick_seed?.country}
-						<div class="flex-none">
-							<img
-								src={`/flags/${pick_seed.country}.svg`}
-								alt={pick_seed.country}
-								class="h-4 w-6 px-1"
-							/>
-						</div>
-					{/if}
-					<div
-						class="grow truncate"
-						class:font-bold={is_pick_winner}
-						class:text-gray-500={!is_pick_winner}
-					>
-						{nickname ? nickname : pick_seed?.name}
-					</div>
-				</div>
-				{#if pick_seed?.seed != undefined}
-					<div class="flex-none px-1 text-gray-400 italic">
-						{pick_seed.seed}
-					</div>
-				{/if}
+				{@render pick_entry(pick_seed, nickname, is_pick_winner)}
 			</div>
 			{#if !pickable && result?.winner != null}
 				<div class="flex w-4 flex-none items-center justify-center text-right">
