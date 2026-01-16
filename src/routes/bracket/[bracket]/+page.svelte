@@ -10,9 +10,10 @@
 	let { data } = $props();
 	let { bracket, picks, all_picks, user, supabase } = $derived(data);
 
-	let view_mode = $state('user-picks'); // 'view-actual' | 'user-picks' | 'all-scores';
+	let view_mode = $state('user-picks'); // 'view-actual' | 'user-picks' | 'all-scores' | 'edit-seeds'
 	let current_pick: string | null = $state(picks?.id ?? null);
 	let bracket_results = $state(bracket.results);
+	let bracket_seeds = $state(bracket.seeds);
 	let pick_entries = $state(picks?.entries ?? setFirstRoundMatches(bracket.draw_size));
 	let nicknames = $state(picks?.nicknames ?? []);
 	let my_bracket = $derived(user && bracket?.owner_id === user.id);
@@ -136,6 +137,24 @@
 		}
 	}
 
+	async function saveSeeds() {
+		const update = { seeds: bracket_seeds };
+
+		const saved = await fetch(`/brackets/${bracket.id}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(update)
+		});
+
+		const data = await saved.json();
+		if (!data.ok) {
+			alerts.add({ type: 'error', message: 'Error saving seeds' });
+		} else {
+			alerts.add({ type: 'ok', message: 'Seeds saved', timeout: 2500 });
+			invalidateAll();
+		}
+	}
+
 	async function lockBracket() {
 		const saved = await fetch(`/brackets/${bracket.id}`, {
 			method: 'PATCH',
@@ -158,14 +177,32 @@
 		<div class="flex items-center justify-between bg-zinc-700">
 			<div>
 				{#if bracket.pickable}
-					<div class="px-4 py-2 text-sm">
-						<input
-							type="text"
-							bind:value={user_name}
-							autocomplete="off"
-							placeholder="Enter your name"
-							class="w-40 rounded border border-gray-200 bg-zinc-200 px-1 py-0.5"
-						/>
+					<div class="flex items-center gap-2 text-sm">
+						<div class="px-4 py-2">
+							<input
+								type="text"
+								bind:value={user_name}
+								autocomplete="off"
+								placeholder="Enter your name"
+								class="w-40 rounded border border-gray-200 bg-zinc-200 px-1 py-0.5"
+							/>
+						</div>
+						{#if my_bracket}
+							<button
+								class="nav-tab"
+								class:selected={view_mode === 'user-picks'}
+								onclick={() => (view_mode = 'user-picks')}
+							>
+								User Picks
+							</button>
+							<button
+								class="nav-tab"
+								class:selected={view_mode === 'edit-seeds'}
+								onclick={() => (view_mode = 'edit-seeds')}
+							>
+								Edit Seeds
+							</button>
+						{/if}
 					</div>
 				{:else}
 					<div class="flex items-center gap-2 text-sm">
@@ -183,6 +220,15 @@
 						>
 							Actual Results
 						</button>
+						{#if my_bracket}
+							<button
+								class="nav-tab"
+								class:selected={view_mode === 'edit-seeds'}
+								onclick={() => (view_mode = 'edit-seeds')}
+							>
+								Edit Seeds
+							</button>
+						{/if}
 						<button
 							class="nav-tab"
 							class:selected={view_mode === 'all-scores'}
@@ -194,10 +240,12 @@
 				{/if}
 			</div>
 			<div class="px-4">
-				{#if bracket.pickable}
+				{#if bracket.pickable && view_mode === 'user-picks'}
 					<button class="btn btn-primary-dark" onclick={savePicks}> Save&nbsp;Picks </button>
 				{:else if my_bracket && view_mode === 'view-actual'}
 					<button class="btn btn-primary-dark" onclick={saveResults}> Save&nbsp;Results </button>
+				{:else if my_bracket && view_mode === 'edit-seeds'}
+					<button class="btn btn-primary-dark" onclick={saveSeeds}> Save&nbsp;Seeds </button>
 				{/if}
 			</div>
 		</div>
@@ -239,7 +287,7 @@
 				view_mode === 'user-picks' &&
 				(!user || picks?.id === current_pick)}
 			mode={view_mode}
-			seeds={bracket.seeds}
+			seeds={bracket_seeds}
 			bind:results={bracket_results}
 			bind:picks={pick_entries}
 			bind:nicknames

@@ -13,8 +13,7 @@
 		getMatchCountByRound,
 		getMatchCountIndices,
 		getRounds,
-		getMatches,
-		bracketScore
+		getMatches
 	} from '$lib/bracket-utils';
 	import { countries } from '$lib/countries';
 
@@ -70,7 +69,6 @@
 	let nicks = $derived(viewed_nicknames || nicknames);
 	let overall_winner = $derived(getWinner(results, viewed, seeds, mode));
 	let overall_winner_nickname = $derived(getWinnerNickname(viewed, mode, nicks));
-	let bracket_score = $derived(bracketScore(draw_size, results, viewed));
 
 	type Round = {
 		index: number;
@@ -443,22 +441,7 @@
 		seeds = seeds;
 	}
 
-	function getFlagEmoji(countryCode: string) {
-		if (countryCode === 'LGBT') return '🏳️‍🌈';
-		if (countryCode === 'UN') return '🇺🇳';
-		if (countryCode === 'EU') return '🇪🇺';
-		if (countryCode === 'GB-ENG') return '🏴󠁧󠁢󠁥󠁮󠁧󠁿';
-		if (countryCode === 'GB-NIR') return '🇬🇧';
-		if (countryCode === 'GB-SCT') return '🏴󠁧󠁢󠁳󠁣󠁴󠁿';
-		if (countryCode === 'GB-WLS') return '🏴󠁧󠁢󠁷󠁬󠁳󠁿';
-		if (countryCode === 'US-CA') return '🇺🇸';
-
-		const codePoints = countryCode
-			.toUpperCase()
-			.split('')
-			.map((char) => 127397 + char.charCodeAt());
-		return String.fromCodePoint(...codePoints);
-	}
+	function redefineSeed(match_index: number, player: 'player_a' | 'player_b') {}
 </script>
 
 {#snippet seed_input(index: number)}
@@ -675,7 +658,7 @@
 	</div>
 {/snippet}
 
-{#snippet col_section(col, mode = 'view', scroll_top = 0)}
+{#snippet col_section(col, mode = 'user-picks', scroll_top = 0)}
 	{#each col as round, ri}
 		<div class="flex h-full flex-col pt-4">
 			<div class="p-1 font-bold uppercase">
@@ -697,6 +680,8 @@
 								{@render result_actual(match.match.match_index, 'player_a')}
 							{:else if mode === 'user-picks'}
 								{@render user_pick(match.match.match_index, 'player_a')}
+							{:else if mode === 'edit-seeds' && round.index === 0}
+								{@render seed_input(m * 2)}
 							{/if}
 						</div>
 						<div
@@ -709,6 +694,8 @@
 								{@render result_actual(match.match.match_index, 'player_b')}
 							{:else if mode === 'user-picks'}
 								{@render user_pick(match.match.match_index, 'player_b')}
+							{:else if mode === 'edit-seeds' && round.index === 0}
+								{@render seed_input(m * 2 + 1)}
 							{/if}
 						</div>
 					</div>

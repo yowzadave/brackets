@@ -250,6 +250,7 @@ const countries = [
   { "label": "Wallis and Futuna (WF)", "value": "WF" },
   { "label": "Samoa (WS)", "value": "WS" },
   { "label": "Kosovo (XK)", "value": "XK" },
+  { "label": "Blank (XX)", "value": "XX" },
   { "label": "Yemen (YE)", "value": "YE" },
   { "label": "Mayotte (YT)", "value": "YT" },
   { "label": "South Africa (ZA)", "value": "ZA" },
