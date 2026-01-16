@@ -23,9 +23,6 @@
 	let viewed_picks = $derived(getViewedPicks(current_pick, all_picks, picks));
 	let viewed_nicknames = $derived(getViewedNicknames(current_pick, all_picks, picks));
 	let scores = $derived(getScoreList(picks, all_picks));
-	$effect(() => {
-		console.log('picks.id', picks?.id, 'current_pick', current_pick);
-	});
 
 	function setFirstRoundMatches(draw_size: number) {
 		const matches = Array(totalMatches(bracket.draw_size)).fill(null);
