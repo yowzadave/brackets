@@ -489,16 +489,19 @@
 	</div>
 {/snippet}
 
-{#snippet result_entry(seed: Seed | null, is_winner: boolean | null = null)}
-	<div class="flex shrink grow items-center gap-1 overflow-hidden pl-0.5">
-		{#if seed?.country}
+{#snippet result_entry(seed: Seed | null, is_winner: boolean | null = null, round: number)}
+	<div
+		class="condensed-font flex shrink grow items-center gap-1 overflow-hidden pl-0.5"
+		class:bg-teal-100={is_winner}
+	>
+		{#if seed?.country && round === 0}
 			<div>
 				<img src={`/flags/${seed.country}.svg`} alt={seed.country} class="h-3.5 w-3.5" />
 			</div>
 		{/if}
 		<div
 			class="grow truncate"
-			class:font-bold={is_winner}
+			class:text-black={is_winner}
 			class:text-gray-500={is_winner != null && !is_winner}
 		>
 			{seed?.name}
@@ -526,7 +529,7 @@
 				class="flex h-full w-full items-center overflow-hidden text-left hover:bg-teal-200"
 				onclick={() => defineWinner(match_index, player)}
 			>
-				{@render result_entry(seed, is_winner)}
+				{@render result_entry(seed, is_winner, match.round)}
 			</button>
 			{#if match.round !== 0}
 				<div
@@ -540,7 +543,7 @@
 		{:else}
 			<div class="flex grow justify-between overflow-hidden">
 				<div class="flex grow overflow-hidden">
-					{@render result_entry(seed, is_winner)}
+					{@render result_entry(seed, is_winner, match.round)}
 				</div>
 				{#if result?.score && player === 'player_b'}
 					<div class="absolute right-4 bottom-0 flex gap-1.5" style="height: {match_unit - 2}px;">
@@ -573,10 +576,14 @@
 {#snippet pick_entry(
 	pick_seed: Seed | null,
 	nickname: string | null,
-	is_pick_winner: boolean | null = null
+	is_pick_winner: boolean | null = null,
+	round: number
 )}
-	<div class="flex shrink grow items-center gap-1 overflow-hidden pl-0.5">
-		{#if pick_seed?.country}
+	<div
+		class="condensed-font flex shrink grow items-center gap-1 overflow-hidden pl-0.5"
+		class:bg-teal-100={is_pick_winner}
+	>
+		{#if pick_seed?.country && round === 0}
 			<div class="flex-none">
 				<img src={`/flags/${pick_seed.country}.svg`} alt={pick_seed.country} class="h-3.5 w-3.5" />
 			</div>
@@ -584,7 +591,7 @@
 
 		<div
 			class="grow truncate"
-			class:font-bold={is_pick_winner}
+			class:text-black={is_pick_winner}
 			class:text-gray-500={is_pick_winner != null && !is_pick_winner}
 		>
 			{nickname ? nickname : pick_seed?.name}
@@ -592,7 +599,7 @@
 	</div>
 
 	{#if pick_seed?.seed != undefined}
-		<div class="px-0.5 text-gray-400 italic">
+		<div class="px-0.5 text-gray-400 italic" class:bg-teal-100={is_pick_winner}>
 			{pick_seed.seed}
 		</div>
 	{/if}
@@ -617,7 +624,7 @@
 					class="flex grow justify-between overflow-hidden text-left"
 					onclick={() => pickWinner(match_index, player)}
 				>
-					{@render pick_entry(pick_seed, nickname, is_pick_winner)}
+					{@render pick_entry(pick_seed, nickname, is_pick_winner, match.round)}
 				</button>
 				{#if match.round === 0}
 					<div
@@ -639,7 +646,7 @@
 			</div>
 		{:else}
 			<div class="flex grow justify-between overflow-hidden">
-				{@render pick_entry(pick_seed, nickname, is_pick_winner)}
+				{@render pick_entry(pick_seed, nickname, is_pick_winner, match.round)}
 			</div>
 			{#if !pickable && result?.winner != null}
 				<div class="flex w-4 flex-none items-center justify-center text-right">
@@ -725,10 +732,7 @@
 {/snippet}
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div
-	class="relative flex grow overflow-x-auto overflow-y-hidden border-t border-gray-400 bg-gray-100 px-4 text-xs"
-	bind:clientHeight={height}
->
+<div class="flex h-full w-full overflow-hidden bg-gray-100 px-4 text-xs" bind:clientHeight={height}>
 	<div
 		class="flex-none overflow-hidden"
 		style="width: {first_col.length * (col_width + col_gap)}px"
@@ -885,5 +889,9 @@
 
 	.overall-winner-container:hover .undo-winner-button {
 		@apply visible;
+	}
+
+	.condensed-font {
+		/* font-family: 'Roboto Condensed', sans-serif; */
 	}
 </style>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import Modal from '$lib/Modal.svelte';
+	import HamburgerIcon from '$lib/assets/icons/hamburger.svg?component';
 	import Bracket from '$lib/Bracket.svelte';
 	import Portal from '$lib/Portal.svelte';
 	import totalMatches from '$lib/total-matches';
@@ -23,6 +24,7 @@
 	let viewed_picks = $derived(getViewedPicks(current_pick, all_picks, picks));
 	let viewed_nicknames = $derived(getViewedNicknames(current_pick, all_picks, picks));
 	let scores = $derived(getScoreList(picks, all_picks));
+	let show_menu = $state(false);
 
 	function setFirstRoundMatches(draw_size: number) {
 		const matches = Array(totalMatches(bracket.draw_size)).fill(null);
@@ -188,24 +190,26 @@
 							/>
 						</div>
 						{#if my_bracket}
-							<button
-								class="nav-tab"
-								class:selected={view_mode === 'user-picks'}
-								onclick={() => (view_mode = 'user-picks')}
-							>
-								User Picks
-							</button>
-							<button
-								class="nav-tab"
-								class:selected={view_mode === 'edit-seeds'}
-								onclick={() => (view_mode = 'edit-seeds')}
-							>
-								Edit Seeds
-							</button>
+							<div class="hidden items-center gap-2 text-sm md:flex">
+								<button
+									class="nav-tab"
+									class:selected={view_mode === 'user-picks'}
+									onclick={() => (view_mode = 'user-picks')}
+								>
+									User Picks
+								</button>
+								<button
+									class="nav-tab"
+									class:selected={view_mode === 'edit-seeds'}
+									onclick={() => (view_mode = 'edit-seeds')}
+								>
+									Edit Seeds
+								</button>
+							</div>
 						{/if}
 					</div>
 				{:else}
-					<div class="flex items-center gap-2 text-sm">
+					<div class="hidden items-center gap-2 text-sm md:flex">
 						<button
 							class="nav-tab"
 							class:selected={view_mode === 'user-picks'}
@@ -236,6 +240,73 @@
 						>
 							All Scores
 						</button>
+					</div>
+					<div class="relative flex text-sm md:hidden">
+						<button
+							class="px-4 py-2 text-gray-400 hover:text-white"
+							onclick={() => (show_menu = !show_menu)}
+						>
+							<HamburgerIcon />
+						</button>
+						<div class="nav-tab">
+							{#if view_mode === 'user-picks'}
+								User Picks
+							{:else if view_mode === 'view-actual'}
+								Actual Results
+							{:else if view_mode === 'edit-seeds'}
+								Edit Seeds
+							{:else if view_mode === 'all-scores'}
+								All Scores
+							{/if}
+						</div>
+						{#if show_menu}
+							<div
+								class="absolute top-10 left-0 z-50 rounded-2xl border border-gray-300 bg-white p-2 text-nowrap shadow-md"
+							>
+								<button
+									class="nav-tab-menu"
+									class:selected={view_mode === 'user-picks'}
+									onclick={() => {
+										view_mode = 'user-picks';
+										show_menu = false;
+									}}
+								>
+									User Picks
+								</button>
+								<button
+									class="nav-tab-menu"
+									class:selected={view_mode === 'view-actual'}
+									onclick={() => {
+										view_mode = 'view-actual';
+										show_menu = false;
+									}}
+								>
+									Actual Results
+								</button>
+								{#if my_bracket}
+									<button
+										class="nav-tab-menu"
+										class:selected={view_mode === 'edit-seeds'}
+										onclick={() => {
+											view_mode = 'edit-seeds';
+											show_menu = false;
+										}}
+									>
+										Edit Seeds
+									</button>
+								{/if}
+								<button
+									class="nav-tab-menu"
+									class:selected={view_mode === 'all-scores'}
+									onclick={() => {
+										view_mode = 'all-scores';
+										show_menu = false;
+									}}
+								>
+									All Scores
+								</button>
+							</div>
+						{/if}
 					</div>
 				{/if}
 			</div>
@@ -280,56 +351,58 @@
 			</table>
 		</div>
 	{:else}
-		<Bracket
-			draw_size={bracket.draw_size}
-			editable={my_bracket && !bracket.pickable}
-			pickable={bracket.pickable &&
-				view_mode === 'user-picks' &&
-				(!user || picks?.id == current_pick)}
-			mode={view_mode}
-			seeds={bracket_seeds}
-			bind:results={bracket_results}
-			bind:picks={pick_entries}
-			bind:nicknames
-			{viewed_picks}
-			{viewed_nicknames}
-		/>
-		{#if view_mode === 'user-picks'}
-			{#if user && picks}
-				<div class="absolute top-26 right-4 text-sm text-gray-800">
-					<select name="current_pick" class="w-48 bg-white" bind:value={current_pick}>
-						{#if user && picks}
-							<option value={picks.id} class="font-bold">{picks.user_name}</option>
-						{/if}
-						{#each all_picks as p}
-							<option value={p.id}>{p.user_name || '<Anonymous>'}</option>
-						{/each}
-					</select>
-					{#if bracket.pickable}
-						<div class="p-2 text-right text-sm text-gray-500 italic">
-							<div>Bracket is open.</div>
-							{#if my_bracket}
-								<button class="btn-text" onclick={confirmLock}>Lock Bracket</button>
+		<div class="relative grow overflow-x-auto overflow-y-hidden border-t border-gray-400">
+			<Bracket
+				draw_size={bracket.draw_size}
+				editable={my_bracket && !bracket.pickable}
+				pickable={bracket.pickable &&
+					view_mode === 'user-picks' &&
+					(!user || picks?.id == current_pick)}
+				mode={view_mode}
+				seeds={bracket_seeds}
+				bind:results={bracket_results}
+				bind:picks={pick_entries}
+				bind:nicknames
+				{viewed_picks}
+				{viewed_nicknames}
+			/>
+			{#if view_mode === 'user-picks'}
+				{#if user && picks}
+					<div class="absolute top-4 right-4 hidden text-sm text-gray-800 md:block">
+						<select name="current_pick" class="w-48 bg-white" bind:value={current_pick}>
+							{#if user && picks}
+								<option value={picks.id} class="font-bold">{picks.user_name}</option>
 							{/if}
-						</div>
-					{/if}
-				</div>
-			{:else if !bracket.pickable}
-				<div
-					class="absolute top-26 right-4 rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-500 italic"
-				>
-					Bracket is locked.
-				</div>
+							{#each all_picks as p}
+								<option value={p.id}>{p.user_name || '<Anonymous>'}</option>
+							{/each}
+						</select>
+						{#if bracket.pickable}
+							<div class="p-2 text-right text-sm text-gray-500 italic">
+								<div>Bracket is open.</div>
+								{#if my_bracket}
+									<button class="btn-text" onclick={confirmLock}>Lock Bracket</button>
+								{/if}
+							</div>
+						{/if}
+					</div>
+				{:else if !bracket.pickable}
+					<div
+						class="absolute top-4 right-4 rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-500 italic"
+					>
+						Bracket is locked.
+					</div>
+				{/if}
+				{#if !bracket.pickable}
+					{@const score = scores.find((s) => s.id === current_pick)?.score ?? 0}
+					<div
+						class="absolute right-4 bottom-4 rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-500"
+					>
+						Total score: <span class="font-bold text-black">{score}</span>
+					</div>
+				{/if}
 			{/if}
-			{#if !bracket.pickable}
-				{@const score = scores.find((s) => s.id === current_pick)?.score ?? 0}
-				<div
-					class="absolute right-4 bottom-4 rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-500"
-				>
-					Total score: <span class="font-bold text-black">{score}</span>
-				</div>
-			{/if}
-		{/if}
+		</div>
 	{/if}
 </div>
 
@@ -390,5 +463,17 @@
 
 	.nav-tab:hover:not(.selected) {
 		@apply text-white;
+	}
+
+	.nav-tab-menu {
+		@apply block rounded-lg px-2 py-1 text-sm text-gray-500;
+
+		&.selected {
+			@apply text-black;
+		}
+
+		&:hover {
+			@apply bg-gray-100 text-black;
+		}
 	}
 </style>
