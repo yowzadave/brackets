@@ -47,7 +47,7 @@
 			<button type="submit" class="btn btn-primary-dark">Create Bracket</button>
 		</div>
 	</div>
-	<div class="relative grow overflow-x-auto overflow-y-hidden border-t border-gray-400">
+	<div class="relative grow overflow-x-hidden overflow-y-hidden border-t border-gray-400">
 		<Bracket bind:seeds {draw_size} mode="create" />
 	</div>
 </form>

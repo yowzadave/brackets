@@ -15,22 +15,25 @@
 </script>
 
 <div class="flex items-center justify-between bg-zinc-700 px-4 py-2 text-sm text-gray-200">
-	<div class="flex items-center gap-8">
+	<div class="flex items-center gap-8 overflow-hidden">
 		<a href="/" class="flex items-center gap-1">
 			<BracketIcon />
 			<div class="text-lg font-bold">BKTS</div>
 		</a>
-		<div id="title-container"></div>
+		<div id="title-container" class="grow overflow-hidden"></div>
 	</div>
 	<div class="text-xs">
 		{#if user}
 			<div class="relative" bind:this={user_menu_el} use:clickOutside onoutclick={outclick}>
-				<button onclick={() => (show_menu = !show_menu)}>
+				<button onclick={() => (show_menu = !show_menu)} class="hidden md:block">
 					{#if user.is_anonymous}
 						Anonymous User
 					{:else}
 						{user.email}
 					{/if}
+				</button>
+				<button onclick={() => (show_menu = !show_menu)} class="block md:hidden">
+					<ProfileIcon />
 				</button>
 				{#if show_menu}
 					<div

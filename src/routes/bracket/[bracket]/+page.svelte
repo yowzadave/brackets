@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import Modal from '$lib/Modal.svelte';
+	import EditableHeader from '$lib/EditableHeader.svelte';
 	import HamburgerIcon from '$lib/assets/icons/hamburger.svg?component';
 	import Bracket from '$lib/Bracket.svelte';
 	import Portal from '$lib/Portal.svelte';
@@ -136,6 +137,21 @@
 		} else {
 			alerts.add({ type: 'ok', message: 'Results saved', timeout: 2500 });
 			invalidateAll();
+		}
+	}
+
+	async function updateBracketName({ value }: { value: string }) {
+		const update = { name: value };
+
+		const saved = await fetch(`/brackets/${bracket.id}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(update)
+		});
+
+		const data = await saved.json();
+		if (!data.ok) {
+			alerts.add({ type: 'error', message: 'Error updating bracket name' });
 		}
 	}
 
@@ -351,7 +367,7 @@
 			</table>
 		</div>
 	{:else}
-		<div class="relative grow overflow-x-auto overflow-y-hidden border-t border-gray-400">
+		<div class="relative grow overflow-x-hidden overflow-y-hidden border-t border-gray-400">
 			<Bracket
 				draw_size={bracket.draw_size}
 				editable={my_bracket && !bracket.pickable}
@@ -445,8 +461,14 @@
 </Modal>
 
 <Portal target="#title-container">
-	<div class="text-lg font-bold text-gray-300">
-		{bracket?.name}
+	<div class="w-full overflow-hidden text-lg font-bold text-gray-300">
+		<EditableHeader
+			disabled={!my_bracket}
+			bind:value={bracket.name}
+			change={updateBracketName}
+			inheritsize
+			maxwidth
+		/>
 	</div>
 </Portal>
 

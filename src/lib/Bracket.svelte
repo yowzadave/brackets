@@ -732,7 +732,10 @@
 {/snippet}
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="flex h-full w-full overflow-hidden bg-gray-100 px-4 text-xs" bind:clientHeight={height}>
+<div
+	class="flex h-full w-full overflow-x-scroll bg-gray-100 px-4 text-xs"
+	bind:clientHeight={height}
+>
 	<div
 		class="flex-none overflow-hidden"
 		style="width: {first_col.length * (col_width + col_gap)}px"
