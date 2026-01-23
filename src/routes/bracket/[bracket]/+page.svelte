@@ -464,7 +464,7 @@
 	<div class="w-full overflow-hidden text-lg font-bold text-gray-300">
 		<EditableHeader
 			disabled={!my_bracket}
-			bind:value={bracket.name}
+			value={bracket.name}
 			change={updateBracketName}
 			inheritsize
 			maxwidth

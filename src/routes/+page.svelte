@@ -1,14 +1,55 @@
 <script lang="ts">
 	let { data } = $props();
-	let { user, brackets, picks } = $derived(data);
+	let { user, public_brackets, brackets, picks } = $derived(data);
 
+	let now = new Date();
 	let picks_not_mine = $derived(getPicksNotMine(picks, brackets));
+	let active_picks = $derived(picks_not_mine.filter((p) => new Date(p.bracket.end_date) > now));
+	let past_picks = $derived(picks_not_mine.filter((p) => new Date(p.bracket.end_date) <= now));
+	let my_active_brackets = $derived(brackets.filter((b) => new Date(b.end_date) > now));
+	let my_past_brackets = $derived(brackets.filter((b) => new Date(b.end_date) <= now));
+	let visible_public_brackets = $derived(
+		getPublicBracketsNotMine(public_brackets, brackets, picks)
+	);
+	let active_brackets = $derived([
+		...my_active_brackets,
+		...active_picks.map((p) => p.bracket),
+		...visible_public_brackets
+	]);
 
 	function getPicksNotMine(picks: any[], brackets: any[]) {
 		const my_bracket_ids = new Set(brackets.map((b) => b.id));
 		return picks.filter((p) => !my_bracket_ids.has(p.bracket_id));
 	}
+
+	function getPublicBracketsNotMine(public_brackets: any[], my_brackets: any[], my_picks: any[]) {
+		const my_bracket_ids = new Set([
+			...my_brackets.map((b) => b.id),
+			...my_picks.map((p) => p.bracket_id)
+		]);
+		return public_brackets.filter((b) => !my_bracket_ids.has(b.id));
+	}
 </script>
+
+{#snippet bracket_button(bracket)}
+	<a href={`/bracket/${bracket.slug || bracket.id}`}>
+		<div class="rounded border border-gray-300 p-2 hover:bg-gray-100">
+			<div class="text-sm font-bold">{bracket.name}</div>
+			<p class="text-xs">
+				{#if bracket.pickable}
+					Open for Picks
+				{:else}
+					Ongoing
+				{/if}
+			</p>
+			{#if bracket.end_date}
+				<p class="text-xs text-gray-500 italic">
+					Ends on: {new Date(bracket.end_date).toLocaleDateString()}
+				</p>
+			{/if}
+		</div>
+	</a>
+{/snippet}
 
 {#if !user}
 	<div
@@ -27,35 +68,53 @@
 		</div>
 	{/if}
 	<div class="space-y-4 p-4">
-		{#if picks_not_mine.length}
+		{#if active_brackets.length}
 			<div>
-				<h1 class="mb-2">Picks</h1>
-				<div>
-					{#each picks_not_mine as pick}
-						<div>
-							<a href={`/bracket/${pick.bracket.slug || pick.bracket_id}`} class="btn-text"
-								>{pick.bracket.name}</a
-							>
-						</div>
+				<h1 class="mb-2">Active Brackets</h1>
+				<div class="flex flex-wrap gap-2">
+					{#each active_brackets as bracket}
+						{@render bracket_button(bracket)}
 					{/each}
 				</div>
 			</div>
 		{/if}
+		<div class="flex flex-wrap gap-4">
+			{#if past_picks.length}
+				<div>
+					<h1 class="mb-2">Past Picks</h1>
+					<div>
+						{#each past_picks as pick}
+							<div>
+								<a href={`/bracket/${pick.bracket.slug || pick.bracket_id}`} class="btn-text"
+									>{pick.bracket.name}</a
+								>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
 
-		{#if brackets.length}
-			<div>
-				<h1 class="mb-2">My Brackets</h1>
+			{#if brackets.length}
 				<div>
-					{#each brackets as bracket}
-						<div>
-							<a href={`/bracket/${bracket.slug || bracket.id}`} class="btn-text">{bracket.name}</a>
-						</div>
-					{/each}
+					<h1 class="mb-2">My Brackets</h1>
+					<div>
+						{#each my_past_brackets as bracket}
+							<div>
+								<a href={`/bracket/${bracket.slug || bracket.id}`} class="btn-text"
+									>{bracket.name}</a
+								>
+							</div>
+						{/each}
+					</div>
 				</div>
-			</div>
-		{/if}
+			{/if}
+		</div>
 		<div>
-			<p><a href="/create" class="btn-text">+ Create a new bracket</a></p>
+			<a href="/create">
+				<button class="rounded border border-gray-300 p-2 text-sm hover:bg-gray-100"
+					>+ Create a new bracket</button
+				>
+			</a>
 		</div>
 	</div>
 {/if}

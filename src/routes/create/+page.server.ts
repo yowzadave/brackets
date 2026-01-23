@@ -13,6 +13,7 @@ export const actions = {
     const draw_size = parseInt(data.get('draw_size') as string);
     const seeds = JSON.parse(data.get('seeds') as string);
     const results = Array(totalMatches(draw_size)).fill(null);
+    const end_date = data.get('end_date') as string;
 
     const first_round_matches = draw_size / 2;
     for (let i = 0; i < first_round_matches; i++) {
@@ -31,6 +32,7 @@ export const actions = {
         draw_size,
         seeds,
         results,
+        end_date,
       })
       .select('*')
       .single();

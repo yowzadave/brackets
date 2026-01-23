@@ -16,7 +16,14 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
     .select('*,bracket: brackets(*)')
     .eq('user_id', user.id);
 
-  const [brackets, picks] = await Promise.all([b, p]);
+  const pub = supabase
+    .from('brackets')
+    .select('*')
+    .is('public', true)
+    .is('pickable', true)
+    .gt('end_date', new Date().toISOString());
+
+  const [brackets, picks, public_brackets] = await Promise.all([b, p, pub]);
 
   if (brackets.error || !brackets.data) {
     console.error('Error loading bracket:', brackets.error);
@@ -28,7 +35,13 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
     throw error(404, 'Not found');
   }
 
+  if (public_brackets.error || !public_brackets.data) {
+    console.error('Error loading public brackets:', public_brackets.error);
+    throw error(404, 'Not found');
+  }
+
   return {
+    public_brackets: public_brackets.data,
     brackets: brackets.data,
     picks: picks.data,
   };
