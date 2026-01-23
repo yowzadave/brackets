@@ -7,7 +7,7 @@
 	import Portal from '$lib/Portal.svelte';
 	import totalMatches from '$lib/total-matches';
 	import { alerts } from '$lib/stores/alerts';
-	import { bracketScore } from '$lib/bracket-utils';
+	import { bracketScore, maxBracketScore } from '$lib/bracket-utils';
 
 	let { data } = $props();
 	let { bracket, picks, all_picks, user, supabase } = $derived(data);
@@ -48,7 +48,8 @@
 		return p
 			.map((pick) => ({
 				...pick,
-				score: bracketScore(bracket.draw_size, bracket_results, pick.entries)
+				score: bracketScore(bracket.draw_size, bracket_results, pick.entries),
+				max_score: maxBracketScore(bracket.draw_size, bracket_results, pick.entries)
 			}))
 			.sort((a, b) => b.score - a.score);
 	}
@@ -342,6 +343,13 @@
 		<div class="relative grow overflow-y-auto border-t border-gray-400 bg-gray-100 p-4">
 			<table>
 				<tbody>
+					<tr>
+						<th></th>
+						<th></th>
+						<th class="px-2 text-xs font-normal text-gray-500 uppercase">Score</th>
+						<th class="px-2 text-xs font-normal text-gray-500 uppercase">Max</th>
+						<th></th>
+					</tr>
 					{#each scores as score}
 						{@const mine = picks && picks.id === score.id}
 						<tr>
@@ -351,15 +359,18 @@
 								{/if}
 							</td>
 							<td
-								class="px-4 text-right text-sm italic"
+								class="px-2 text-right text-sm italic"
 								class:font-bold={mine}
 								class:text-black={mine}
 								class:text-gray-500={!mine}
 							>
 								{score.user_name || '<Anonymous>'}
 							</td>
-							<td class="font-bold">
+							<td class="px-2 text-right font-bold">
 								{score.score}
+							</td>
+							<td class="px-2 text-right">
+								{score.max_score}
 							</td>
 						</tr>
 					{/each}
