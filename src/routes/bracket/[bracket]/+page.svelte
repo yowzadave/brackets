@@ -347,7 +347,7 @@
 						<th></th>
 						<th></th>
 						<th class="px-2 text-xs font-normal text-gray-500 uppercase">Score</th>
-						<th class="px-2 text-xs font-normal text-gray-500 uppercase">Max</th>
+						<th class="px-2 text-xs font-normal text-gray-500 uppercase"> Max </th>
 						<th></th>
 					</tr>
 					{#each scores as score}

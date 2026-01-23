@@ -94,20 +94,31 @@ function bracketScore(draw_size: number, results: Result[], picks: Result[]) {
 function maxBracketScore(draw_size: number, results: Result[], picks: Result[]) {
   const rounds = getRounds(draw_size);
   const matches = getMatches(draw_size, rounds);
+  const eliminated = new Set<number | null>();
+
+  matches.forEach((match) => {
+    const result = results[match.match_index];
+    const pick = picks[match.match_index];
+
+    if (result?.winner != undefined && result.winner !== pick?.winner && !eliminated.has(result.winner)) {
+      eliminated.add(result.winner);
+    }
+  });
+
   return matches.reduce((score, match) => {
     const result = results[match.match_index];
     const pick = picks[match.match_index];
-    const round = rounds[match.round];
 
-    if (result?.winner == undefined) {
+    const round = rounds[match.round];
+    const cannot_win = eliminated.has(result?.player_a) && eliminated.has(result?.player_b);
+
+    if (result?.winner == undefined && !cannot_win) {
       return score + round.value;
-    } else if (result.winner === pick?.winner) {
+    } else if (result.winner != undefined && result.winner === pick?.winner) {
       return score + round.value;
     } else {
       return score;
     }
-
-    return score;
   }, 0);
 }
 
