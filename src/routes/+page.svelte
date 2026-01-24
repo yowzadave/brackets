@@ -78,22 +78,7 @@
 				</div>
 			</div>
 		{/if}
-		<div class="flex flex-wrap gap-4">
-			{#if past_picks.length}
-				<div>
-					<h1 class="mb-2">Past Picks</h1>
-					<div>
-						{#each past_picks as pick}
-							<div>
-								<a href={`/bracket/${pick.bracket.slug || pick.bracket_id}`} class="btn-text"
-									>{pick.bracket.name}</a
-								>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
-
+		<div class="flex flex-wrap gap-12">
 			{#if brackets.length}
 				<div>
 					<h1 class="mb-2">My Brackets</h1>
@@ -102,6 +87,21 @@
 							<div>
 								<a href={`/bracket/${bracket.slug || bracket.id}`} class="btn-text"
 									>{bracket.name}</a
+								>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
+			{#if past_picks.length}
+				<div>
+					<h1 class="mb-2">Past Picks</h1>
+					<div>
+						{#each past_picks as pick}
+							<div>
+								<a href={`/bracket/${pick.bracket.slug || pick.bracket_id}`} class="btn-text"
+									>{pick.bracket.name}</a
 								>
 							</div>
 						{/each}
