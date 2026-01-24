@@ -346,8 +346,8 @@
 					<tr>
 						<th></th>
 						<th></th>
-						<th class="px-2 text-xs font-normal text-gray-500 uppercase">Score</th>
-						<th class="px-2 text-xs font-normal text-gray-500 uppercase"> Max </th>
+						<th class="px-4 text-xs font-normal text-gray-500 uppercase">Score</th>
+						<th class="px-4 text-xs font-normal text-gray-500 uppercase"> Max </th>
 						<th></th>
 					</tr>
 					{#each scores as score}
@@ -366,10 +366,10 @@
 							>
 								{score.user_name || '<Anonymous>'}
 							</td>
-							<td class="px-2 text-right font-bold">
+							<td class="px-4 text-right font-bold">
 								{score.score}
 							</td>
-							<td class="px-2 text-right">
+							<td class="px-4 text-right text-gray-500">
 								{score.max_score}
 							</td>
 						</tr>

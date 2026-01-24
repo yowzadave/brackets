@@ -113,7 +113,7 @@ function maxBracketScore(draw_size: number, results: Result[], picks: Result[]) 
     }
   });
 
-  return matches.reduce((score, match, i) => {
+  return matches.reduce((score, match) => {
     const result = results[match.match_index];
     const pick = picks[match.match_index];
 
