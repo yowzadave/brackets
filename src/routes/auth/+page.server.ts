@@ -3,6 +3,20 @@ import { redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
+  google: async ({ url, locals: { supabase } }) => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${url.origin}/auth/callback`,
+        skipBrowserRedirect: true,
+      },
+    });
+    if (error) {
+      console.error(error);
+      redirect(303, '/auth/error');
+    }
+    redirect(303, data.url!);
+  },
   signup: async ({ request, locals: { supabase } }) => {
     const formData = await request.formData();
     const email = formData.get('email') as string;
