@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { invalidate } from '$app/navigation';
+	import { page } from '$app/state';
 
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.ico';
@@ -28,14 +29,16 @@
 	<Navbar {user} />
 	<Alerts />
 	{@render children?.()}
-	<footer
-		class="mt-auto flex justify-between border-t border-gray-200 px-4 py-2 text-left text-xs text-gray-400"
-	>
-		<div>&copy; 2026 DCA</div>
-		<div class="flex gap-2">
-			<a href="/privacy" class="hover:text-gray-600">Privacy Policy</a>
-			<div>|</div>
-			<a href="/terms" class="hover:text-gray-600">Terms</a>
-		</div>
-	</footer>
+	{#if page.url.pathname === '/'}
+		<footer
+			class="mt-auto flex justify-between border-t border-gray-200 px-4 py-2 text-left text-xs text-gray-400"
+		>
+			<div>&copy; 2026 DCA</div>
+			<div class="flex gap-2">
+				<a href="/privacy" class="hover:text-gray-600">Privacy Policy</a>
+				<div>|</div>
+				<a href="/terms" class="hover:text-gray-600">Terms</a>
+			</div>
+		</footer>
+	{/if}
 </div>
