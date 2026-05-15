@@ -24,8 +24,14 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<div class="flex h-full grow flex-col">
+<div class="flex h-full grow flex-col bg-zinc-100">
 	<Navbar {user} />
 	<Alerts />
 	{@render children?.()}
+	<footer
+		class="mt-auto flex justify-between border-t border-gray-200 px-4 py-2 text-left text-xs text-gray-400"
+	>
+		<a href="/privacy" class="hover:text-gray-600">Privacy Policy</a>
+		<div>&copy; 2026 DCA</div>
+	</footer>
 </div>

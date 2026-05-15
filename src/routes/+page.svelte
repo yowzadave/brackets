@@ -33,7 +33,7 @@
 
 {#snippet bracket_button(bracket)}
 	<a href={`/bracket/${bracket.slug || bracket.id}`}>
-		<div class="rounded border border-gray-300 p-2 hover:bg-gray-100">
+		<div class="rounded border border-gray-300 bg-white p-2 hover:border-gray-400">
 			<div class="text-sm font-bold">{bracket.name}</div>
 			<p class="text-xs">
 				{#if bracket.pickable}
@@ -52,9 +52,7 @@
 {/snippet}
 
 {#if !user}
-	<div
-		class="flex h-full grow flex-col items-center justify-center gap-8 bg-gray-100 py-4 md:flex-row"
-	>
+	<div class="flex h-full grow flex-col items-center justify-center gap-8 py-4 md:flex-row">
 		<a href="/auth" class="homepage-link"> Log In </a>
 	</div>
 {:else}
@@ -111,7 +109,7 @@
 		</div>
 		<div>
 			<a href="/create">
-				<button class="rounded border border-gray-300 p-2 text-sm hover:bg-gray-100"
+				<button class="rounded border border-gray-300 bg-white p-2 text-sm hover:border-gray-400"
 					>+ Create a new bracket</button
 				>
 			</a>
