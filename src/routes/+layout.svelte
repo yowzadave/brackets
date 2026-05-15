@@ -31,7 +31,11 @@
 	<footer
 		class="mt-auto flex justify-between border-t border-gray-200 px-4 py-2 text-left text-xs text-gray-400"
 	>
-		<a href="/privacy" class="hover:text-gray-600">Privacy Policy</a>
 		<div>&copy; 2026 DCA</div>
+		<div class="flex gap-2">
+			<a href="/privacy" class="hover:text-gray-600">Privacy Policy</a>
+			<div>|</div>
+			<a href="/terms" class="hover:text-gray-600">Terms</a>
+		</div>
 	</footer>
 </div>
