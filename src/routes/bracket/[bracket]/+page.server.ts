@@ -29,7 +29,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
     bracket = id_bracket;
   }
 
-  let picks = null;
+  let my_picks: any[] = [];
   let all_picks = null;
   if (user) {
     const p = await supabase
@@ -37,16 +37,14 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
       .select('*')
       .eq('bracket_id', bracket.data.id)
       .eq('user_id', user.id)
-      .maybeSingle();
+      .order('created_at', { ascending: true });
 
     if (p.error) {
       console.error('Error loading picks:', p.error);
       throw error(404, 'Not found');
     }
 
-    if (p.data) {
-      picks = p.data;
-    }
+    my_picks = p.data ?? [];
 
     const ap = await supabase
       .from('picks')
@@ -65,7 +63,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
 
   return {
     bracket: bracket.data,
-    picks,
+    my_picks,
     all_picks: all_picks || [],
   };
 };

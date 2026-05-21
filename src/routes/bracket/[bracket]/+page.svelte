@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import Modal from '$lib/Modal.svelte';
 	import EditableHeader from '$lib/EditableHeader.svelte';
 	import HamburgerIcon from '$lib/assets/icons/hamburger.svg?component';
+	import TrashIcon from '$lib/assets/icons/trash.svg?component';
 	import Bracket from '$lib/Bracket.svelte';
 	import Portal from '$lib/Portal.svelte';
 	import totalMatches from '$lib/total-matches';
@@ -10,22 +12,36 @@
 	import { bracketScore, maxBracketScore } from '$lib/bracket-utils';
 
 	let { data } = $props();
-	let { bracket, picks, all_picks, user, supabase } = $derived(data);
+	let { bracket, my_picks, all_picks, user, supabase } = $derived(data);
 
 	let view_mode = $state('user-picks'); // 'view-actual' | 'user-picks' | 'all-scores' | 'edit-seeds'
-	let current_pick: string | null = $state(picks?.id ?? null);
+	let current_pick: string | null = $state(untrack(() => my_picks[0]?.id ?? null));
 	let bracket_results = $state(bracket.results);
 	let bracket_seeds = $state(bracket.seeds);
-	let pick_entries = $state(picks?.entries ?? setFirstRoundMatches(bracket.draw_size));
-	let nicknames = $state(picks?.nicknames ?? []);
+	let pick_entries = $state(untrack(() => my_picks[0]?.entries ?? setFirstRoundMatches(bracket.draw_size)));
+	let nicknames = $state(untrack(() => my_picks[0]?.nicknames ?? []));
 	let my_bracket = $derived(user && bracket?.owner_id === user.id);
-	let user_name = $state(picks?.user_name);
+	let user_name = $state(untrack(() => my_picks[0]?.user_name));
 	let welcome_el: Modal;
 	let bracket_update_el: Modal;
-	let viewed_picks = $derived(getViewedPicks(current_pick, all_picks, picks));
-	let viewed_nicknames = $derived(getViewedNicknames(current_pick, all_picks, picks));
-	let scores = $derived(getScoreList(picks, all_picks));
+	let delete_picks_el: Modal;
+	let is_my_current_pick = $derived(current_pick === null || my_picks.some((p) => p.id === current_pick));
+	let viewed_picks = $derived(getViewedPicks(current_pick, all_picks, my_picks));
+	let viewed_nicknames = $derived(getViewedNicknames(current_pick, all_picks, my_picks));
+	let scores = $derived(getScoreList(my_picks, all_picks));
 	let show_menu = $state(false);
+
+	$effect(() => {
+		const my_pick = my_picks.find((p) => p.id === current_pick);
+		if (my_pick) {
+			pick_entries = my_pick.entries;
+			nicknames = my_pick.nicknames ?? [];
+			user_name = my_pick.user_name;
+		} else if (current_pick === null) {
+			pick_entries = setFirstRoundMatches(bracket.draw_size);
+			nicknames = [];
+		}
+	});
 
 	function setFirstRoundMatches(draw_size: number) {
 		const matches = Array(totalMatches(bracket.draw_size)).fill(null);
@@ -43,9 +59,8 @@
 		return matches;
 	}
 
-	function getScoreList(picks: any, all_picks: any[]) {
-		let p = picks ? [picks, ...all_picks] : [all_picks];
-		return p
+	function getScoreList(my_picks: any[], all_picks: any[]) {
+		return [...my_picks, ...all_picks]
 			.map((pick) => ({
 				...pick,
 				score: bracketScore(bracket.draw_size, bracket_results, pick.entries),
@@ -54,16 +69,16 @@
 			.sort((a, b) => b.score - a.score);
 	}
 
-	function getViewedPicks(current_pick: string | null, all_picks: any[], picks: any) {
-		if (!current_pick) return null;
-		if (picks && picks.id === current_pick) return null;
+	function getViewedPicks(current_pick: string | null, all_picks: any[], my_picks: any[]) {
+		if (current_pick === null) return null;
+		if (my_picks.some((p) => p.id === current_pick)) return null;
 
 		return all_picks?.find((p) => p.id === current_pick)?.entries ?? null;
 	}
 
-	function getViewedNicknames(current_pick: string | null, all_picks: any[], picks: any) {
-		if (!current_pick) return null;
-		if (picks && picks.id === current_pick) return null;
+	function getViewedNicknames(current_pick: string | null, all_picks: any[], my_picks: any[]) {
+		if (current_pick === null) return null;
+		if (my_picks.some((p) => p.id === current_pick)) return null;
 
 		return all_picks?.find((p) => p.id === current_pick)?.nicknames ?? null;
 	}
@@ -83,7 +98,9 @@
 			}
 		}
 
-		if (!picks) {
+		const active_my_pick = my_picks.find((p) => p.id === current_pick);
+
+		if (!active_my_pick) {
 			const saved = await fetch(`/picks`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -104,7 +121,7 @@
 				console.log('Error saving picks:', data.error);
 			}
 		} else {
-			const saved = await fetch(`/picks/${picks.id}`, {
+			const saved = await fetch(`/picks/${active_my_pick.id}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ entries: pick_entries, user_name, nicknames })
@@ -116,6 +133,26 @@
 				alerts.add({ type: 'error', message: 'Error saving picks' });
 				console.log('Error updating picks:', data.error);
 			}
+		}
+	}
+
+	function confirmDeletePicks() {
+		delete_picks_el.open();
+	}
+
+	async function deletePicks() {
+		const active_my_pick = my_picks.find((p) => p.id === current_pick);
+		if (!active_my_pick) return;
+
+		const result = await fetch(`/picks/${active_my_pick.id}`, { method: 'DELETE' });
+		const data = await result.json();
+		if (data.ok) {
+			const remaining = my_picks.filter((p) => p.id !== active_my_pick.id);
+			current_pick = remaining[0]?.id ?? null;
+			invalidateAll();
+			alerts.add({ type: 'ok', message: 'Picks deleted', timeout: 2500 });
+		} else {
+			alerts.add({ type: 'error', message: 'Error deleting picks' });
 		}
 	}
 
@@ -327,9 +364,18 @@
 					</div>
 				{/if}
 			</div>
-			<div class="px-4">
-				{#if bracket.pickable && view_mode === 'user-picks'}
+			<div class="flex items-center gap-2 px-4">
+				{#if bracket.pickable && view_mode === 'user-picks' && is_my_current_pick}
 					<button class="btn btn-primary-dark" onclick={savePicks}> Save&nbsp;Picks </button>
+					{#if current_pick !== null}
+						<button
+							class="cursor-pointer text-gray-400 hover:text-red-500"
+							onclick={confirmDeletePicks}
+							title="Delete picks"
+						>
+							<TrashIcon />
+						</button>
+					{/if}
 				{:else if my_bracket && view_mode === 'view-actual'}
 					<button class="btn btn-primary-dark" onclick={saveResults}> Save&nbsp;Results </button>
 				{:else if my_bracket && view_mode === 'edit-seeds'}
@@ -351,7 +397,7 @@
 						<th></th>
 					</tr>
 					{#each scores as score}
-						{@const mine = picks && picks.id === score.id}
+						{@const mine = my_picks.some((p) => p.id === score.id)}
 						<tr>
 							<td class="text-sm">
 								{#if mine}
@@ -384,7 +430,7 @@
 				editable={my_bracket && !bracket.pickable}
 				pickable={bracket.pickable &&
 					view_mode === 'user-picks' &&
-					(!user || picks?.id == current_pick)}
+					(!user || is_my_current_pick)}
 				mode={view_mode}
 				seeds={bracket_seeds}
 				bind:results={bracket_results}
@@ -394,17 +440,24 @@
 				{viewed_nicknames}
 			/>
 			{#if view_mode === 'user-picks'}
-				{#if user && picks}
+				{#if user}
 					<div class="absolute top-4 right-4 hidden text-sm text-gray-800 md:block">
 						<select name="current_pick" class="w-48 bg-white" bind:value={current_pick}>
-							{#if user && picks}
-								<option value={picks.id} class="font-bold">{picks.user_name}</option>
+							{#if bracket.pickable}
+								<option value={null}>+ New picks set</option>
 							{/if}
-							{#each all_picks as p}
-								<option value={p.id}>{p.user_name || '<Anonymous>'}</option>
+							{#each my_picks as p}
+								<option value={p.id} class="font-bold">{p.user_name || '<Anonymous>'}</option>
 							{/each}
+							{#if all_picks.length > 0}
+								<optgroup label="Other picks">
+									{#each all_picks as p}
+										<option value={p.id}>{p.user_name || '<Anonymous>'}</option>
+									{/each}
+								</optgroup>
+							{/if}
 						</select>
-						{#if bracket.pickable}
+						{#if bracket.pickable && is_my_current_pick}
 							<div class="p-2 text-right text-sm text-gray-500 italic">
 								<div>Bracket is open.</div>
 								{#if my_bracket}
@@ -432,6 +485,21 @@
 		</div>
 	{/if}
 </div>
+
+<Modal
+	bind:this={delete_picks_el}
+	closeable
+	buttons={[
+		{ label: 'Cancel', type: 'cancel' },
+		{ label: 'Delete Picks', type: 'confirm', style: 'danger' }
+	]}
+	confirm={deletePicks}
+>
+	<div slot="title">Delete Picks</div>
+	<div slot="content">
+		<p>Are you sure you want to delete this set of picks? This cannot be undone.</p>
+	</div>
+</Modal>
 
 <Modal
 	bind:this={bracket_update_el}
