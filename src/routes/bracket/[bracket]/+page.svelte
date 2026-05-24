@@ -18,14 +18,18 @@
 	let current_pick: string | null = $state(untrack(() => my_picks[0]?.id ?? null));
 	let bracket_results = $state(bracket.results);
 	let bracket_seeds = $state(bracket.seeds);
-	let pick_entries = $state(untrack(() => my_picks[0]?.entries ?? setFirstRoundMatches(bracket.draw_size)));
+	let pick_entries = $state(
+		untrack(() => my_picks[0]?.entries ?? setFirstRoundMatches(bracket.draw_size))
+	);
 	let nicknames = $state(untrack(() => my_picks[0]?.nicknames ?? []));
 	let my_bracket = $derived(user && bracket?.owner_id === user.id);
 	let user_name = $state(untrack(() => my_picks[0]?.user_name));
 	let welcome_el: Modal;
 	let bracket_update_el: Modal;
 	let delete_picks_el: Modal;
-	let is_my_current_pick = $derived(current_pick === null || my_picks.some((p) => p.id === current_pick));
+	let is_my_current_pick = $derived(
+		current_pick === null || my_picks.some((p) => p.id === current_pick)
+	);
 	let viewed_picks = $derived(getViewedPicks(current_pick, all_picks, my_picks));
 	let viewed_nicknames = $derived(getViewedNicknames(current_pick, all_picks, my_picks));
 	let scores = $derived(getScoreList(my_picks, all_picks));
@@ -428,9 +432,7 @@
 			<Bracket
 				draw_size={bracket.draw_size}
 				editable={my_bracket && !bracket.pickable}
-				pickable={bracket.pickable &&
-					view_mode === 'user-picks' &&
-					(!user || is_my_current_pick)}
+				pickable={bracket.pickable && view_mode === 'user-picks' && (!user || is_my_current_pick)}
 				mode={view_mode}
 				seeds={bracket_seeds}
 				bind:results={bracket_results}
@@ -441,7 +443,7 @@
 			/>
 			{#if view_mode === 'user-picks'}
 				{#if user}
-					<div class="absolute top-4 right-4 hidden text-sm text-gray-800 md:block">
+					<div class="absolute top-4 right-4 text-sm text-gray-800">
 						<select name="current_pick" class="w-48 bg-white" bind:value={current_pick}>
 							{#if bracket.pickable}
 								<option value={null}>+ New picks set</option>
@@ -458,7 +460,7 @@
 							{/if}
 						</select>
 						{#if bracket.pickable && is_my_current_pick}
-							<div class="p-2 text-right text-sm text-gray-500 italic">
+							<div class="hidden p-2 text-right text-sm text-gray-500 italic md:block">
 								<div>Bracket is open.</div>
 								{#if my_bracket}
 									<button class="btn-text" onclick={confirmLock}>Lock Bracket</button>
