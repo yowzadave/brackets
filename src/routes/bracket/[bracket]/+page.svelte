@@ -12,7 +12,7 @@
 	import { bracketScore, maxBracketScore } from '$lib/bracket-utils';
 
 	let { data } = $props();
-	let { bracket, my_picks, all_picks, user, supabase } = $derived(data);
+	let { bracket, my_picks, all_picks, user, supabase, is_admin } = $derived(data);
 
 	let view_mode = $state('user-picks'); // 'view-actual' | 'user-picks' | 'all-scores' | 'edit-seeds'
 	let current_pick: string | null = $state(untrack(() => my_picks[0]?.id ?? null));
@@ -23,6 +23,7 @@
 	);
 	let nicknames = $state(untrack(() => my_picks[0]?.nicknames ?? []));
 	let my_bracket = $derived(user && bracket?.owner_id === user.id);
+	let can_save_results = $derived(my_bracket || is_admin);
 	let user_name = $state(untrack(() => my_picks[0]?.user_name));
 	let welcome_el: Modal;
 	let bracket_update_el: Modal;
@@ -380,7 +381,7 @@
 							<TrashIcon />
 						</button>
 					{/if}
-				{:else if my_bracket && view_mode === 'view-actual'}
+				{:else if can_save_results && view_mode === 'view-actual'}
 					<button class="btn btn-primary-dark" onclick={saveResults}> Save&nbsp;Results </button>
 				{:else if my_bracket && view_mode === 'edit-seeds'}
 					<button class="btn btn-primary-dark" onclick={saveSeeds}> Save&nbsp;Seeds </button>
@@ -431,7 +432,7 @@
 		<div class="relative grow overflow-x-hidden overflow-y-hidden border-t border-gray-400">
 			<Bracket
 				draw_size={bracket.draw_size}
-				editable={my_bracket && !bracket.pickable}
+				editable={can_save_results && !bracket.pickable}
 				pickable={bracket.pickable && view_mode === 'user-picks' && (!user || is_my_current_pick)}
 				mode={view_mode}
 				seeds={bracket_seeds}

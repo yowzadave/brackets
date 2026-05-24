@@ -5,13 +5,13 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
   let bracket;
   const id_bracket_req = supabase
     .from('brackets')
-    .select('*')
+    .select('*, bracket_admins(user_id)')
     .eq('id', params.bracket)
     .single();
 
   const slug_bracket_req = supabase
     .from('brackets')
-    .select('*')
+    .select('*, bracket_admins(user_id)')
     .eq('slug', params.bracket)
     .single();
 
@@ -61,9 +61,14 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
     all_picks = ap.data;
   }
 
+  const is_admin = user
+    ? bracket.data.bracket_admins.some((a: { user_id: string }) => a.user_id === user.id)
+    : false;
+
   return {
     bracket: bracket.data,
     my_picks,
     all_picks: all_picks || [],
+    is_admin,
   };
 };
