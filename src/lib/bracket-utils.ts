@@ -75,6 +75,14 @@ function getMatches(draw_size: number, rounds: Round[]): Match[] {
   ).matches;
 }
 
+function getParentMatch(match_index: number, player: 'player_a' | 'player_b', matches: Match[], round_match_indices: number[]): number | null {
+  const match = matches[match_index];
+  if (match.round <= 0) return null;
+  const index_in_round = match_index - round_match_indices[match.round];
+  const pm = round_match_indices[match.round - 1] + index_in_round * 2;
+  return player === 'player_a' ? pm : pm + 1;
+}
+
 function bracketScore(draw_size: number, results: Result[], picks: Result[]) {
   const rounds = getRounds(draw_size);
   const matches = getMatches(draw_size, rounds);
@@ -134,4 +142,4 @@ function maxBracketScore(draw_size: number, results: Result[], picks: Result[]) 
   }, 0);
 }
 
-export { getMatchCountByRound, getMatchCountIndices, getRounds, getMatches, bracketScore, maxBracketScore };
+export { getMatchCountByRound, getMatchCountIndices, getRounds, getMatches, getParentMatch, bracketScore, maxBracketScore };

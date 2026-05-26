@@ -9,7 +9,8 @@
 	import Portal from '$lib/Portal.svelte';
 	import totalMatches from '$lib/total-matches';
 	import { alerts } from '$lib/stores/alerts';
-	import { bracketScore, maxBracketScore } from '$lib/bracket-utils';
+	import { getMatchCountByRound, getMatchCountIndices, getRounds, getMatches, getParentMatch, bracketScore, maxBracketScore } from '$lib/bracket-utils';
+	import isEqual from 'lodash/isEqual';
 
 	let { data } = $props();
 	let { bracket, my_picks, all_picks, user, supabase, is_admin } = $derived(data);
@@ -35,6 +36,11 @@
 	let viewed_nicknames = $derived(getViewedNicknames(current_pick, all_picks, my_picks));
 	let scores = $derived(getScoreList(my_picks, all_picks));
 	let show_menu = $state(false);
+
+	$effect(() => {
+		$: console.log('bracket results?', bracket.results);
+		bracket_results = bracket.results;
+	});
 
 	$effect(() => {
 		const my_pick = my_picks.find((p) => p.id === current_pick);
@@ -166,12 +172,75 @@
 	}
 
 	async function saveResults() {
-		const update = { results: bracket_results };
+		const original = bracket.results ?? [];
+
+		// Only track winner/score changes — player_a/player_b are re-derived below
+		const changedIndices = new Set<number>();
+		for (let i = 0; i < bracket_results.length; i++) {
+			if (!isEqual(bracket_results[i]?.winner, original[i]?.winner) ||
+				!isEqual(bracket_results[i]?.score, original[i]?.score)) {
+				changedIndices.add(i);
+			}
+		}
+
+		if (changedIndices.size === 0) {
+			alerts.add({ type: 'ok', message: 'No changes to save', timeout: 2500 });
+			return;
+		}
+
+		const { data: latest, error: fetchError } = await supabase
+			.from('brackets')
+			.select('results')
+			.eq('id', bracket.id)
+			.single();
+
+		if (fetchError) {
+			alerts.add({ type: 'error', message: 'Error saving results' });
+			return;
+		}
+
+		// Start from the latest DB state and apply only winner/score changes
+		const latestResults: any[] = latest?.results ?? [...original];
+		const merged: any[] = [...latestResults];
+		for (const i of changedIndices) {
+			merged[i] = {
+				...(merged[i] ?? { player_a: null, player_b: null }),
+				winner: bracket_results[i]?.winner ?? null,
+				score: bracket_results[i]?.score ?? null,
+			};
+		}
+
+		// Re-derive every player_a/player_b from parent match winners so concurrent
+		// edits to sibling matches don't clobber each other's propagated players.
+		const rounds = getRounds(bracket.draw_size);
+		const allMatches = getMatches(bracket.draw_size, rounds);
+		const roundMatchIndices = getMatchCountIndices(getMatchCountByRound(bracket.draw_size));
+
+		for (let i = 0; i < allMatches.length; i++) {
+			for (const player of ['player_a', 'player_b'] as const) {
+				const parentIdx = getParentMatch(i, player, allMatches, roundMatchIndices);
+				if (parentIdx === null) continue;
+				const winner = merged[parentIdx]?.winner ?? null;
+				if (merged[i]) {
+					merged[i] = { ...merged[i], [player]: winner };
+				} else if (winner !== null) {
+					merged[i] = { player_a: null, player_b: null, winner: null, score: null, [player]: winner };
+				}
+			}
+		}
+
+		// Clear any winner that's no longer one of the match's current players
+		for (let i = 0; i < merged.length; i++) {
+			const m = merged[i];
+			if (m?.winner !== null && m?.winner !== m?.player_a && m?.winner !== m?.player_b) {
+				merged[i] = { ...m, winner: null };
+			}
+		}
 
 		const saved = await fetch(`/brackets/${bracket.id}`, {
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(update)
+			body: JSON.stringify({ results: merged })
 		});
 
 		const data = await saved.json();

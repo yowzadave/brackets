@@ -13,7 +13,8 @@
 		getMatchCountByRound,
 		getMatchCountIndices,
 		getRounds,
-		getMatches
+		getMatches,
+		getParentMatch
 	} from '$lib/bracket-utils';
 	import { countries } from '$lib/countries';
 
@@ -262,15 +263,6 @@
 		return round_match_indices[match.round + 1] + index_in_next_round;
 	}
 
-	function parentMatch(match_index: number, player: 'player_a' | 'player_b') {
-		const match = matches[match_index];
-		if (match.round <= 0) return null;
-		const index_in_round = match_index - round_match_indices[match.round];
-		const index_in_prev_round = index_in_round * 2;
-		const pm = round_match_indices[match.round - 1] + index_in_prev_round;
-		return player === 'player_a' ? pm : pm + 1;
-	}
-
 	function defineWinner(match_index: number, player: 'player_a' | 'player_b') {
 		const result = results[match_index];
 		result.winner = result[player];
@@ -338,7 +330,7 @@
 	function undoResult(match_index: number, player: 'player_a' | 'player_b') {
 		const result = results[match_index];
 		result[player] = null;
-		const parent = parentMatch(match_index, player);
+		const parent = getParentMatch(match_index, player, matches, round_match_indices);
 		if (parent != null) {
 			const parent_result = results[parent];
 			parent_result.winner = null;
@@ -368,7 +360,7 @@
 		if (!pick) return;
 		const player_index = pick[player];
 		unpickDescendants(match_index, player_index);
-		const parent = parentMatch(match_index, player);
+		const parent = getParentMatch(match_index, player, matches, round_match_indices);
 		if (parent != null) {
 			const parent_pick = picks[parent];
 			parent_pick.winner = null;
