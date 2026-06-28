@@ -9,7 +9,8 @@
 	import Portal from '$lib/Portal.svelte';
 	import totalMatches from '$lib/total-matches';
 	import { alerts } from '$lib/stores/alerts';
-	import { getMatchCountByRound, getMatchCountIndices, getRounds, getMatches, getParentMatch, bracketScore, maxBracketScore } from '$lib/bracket-utils';
+	import { getMatchCountByRound, getMatchCountIndices, getRounds, getMatches, getParentMatch } from '$lib/bracket-utils';
+	import { bracketScore, maxBracketScore } from '$lib/scoring';
 	import isEqual from 'lodash/isEqual';
 
 	let { data } = $props();
@@ -74,8 +75,20 @@
 		return [...my_picks, ...all_picks]
 			.map((pick) => ({
 				...pick,
-				score: bracketScore(bracket.draw_size, bracket_results, pick.entries),
-				max_score: maxBracketScore(bracket.draw_size, bracket_results, pick.entries)
+				score: bracketScore(
+					bracket.draw_size,
+					bracket_results,
+					pick.entries,
+					bracket_seeds,
+					bracket.scoring_method
+				),
+				max_score: maxBracketScore(
+					bracket.draw_size,
+					bracket_results,
+					pick.entries,
+					bracket_seeds,
+					bracket.scoring_method
+				)
 			}))
 			.sort((a, b) => b.score - a.score);
 	}
