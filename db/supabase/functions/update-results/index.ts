@@ -24,6 +24,28 @@ import {
 
 const RAPIDAPI_HOST = 'tennis-api-atp-wta-itf.p.rapidapi.com';
 
+// Thrown when the API returns 429 after exhausting in-call retries. Carries the
+// status so the caller can stop the run rather than burning a request per
+// bracket against an already-depleted quota.
+class RateLimitError extends Error {
+	constructor(public body: string) {
+		super(`API 429 (rate limited): ${body}`);
+		this.name = 'RateLimitError';
+	}
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Parse a Retry-After header (delta-seconds or HTTP-date) into milliseconds.
+function parseRetryAfterMs(res: Response): number | null {
+	const raw = res.headers.get('retry-after');
+	if (!raw) return null;
+	const secs = Number(raw);
+	if (Number.isFinite(secs)) return Math.max(0, secs * 1000);
+	const when = Date.parse(raw);
+	return Number.isFinite(when) ? Math.max(0, when - Date.now()) : null;
+}
+
 type Bracket = {
 	id: string;
 	draw_size: number;
@@ -35,26 +57,48 @@ type Bracket = {
 	timezone: string | null;
 };
 
+// Max in-call retries on a 429. Short transient rate-limits (per-second/minute)
+// recover within a couple of backoffs; a depleted daily quota will not, so we
+// only retry when Retry-After is absent or short and otherwise fail fast.
+const MAX_RETRIES = 2;
+const MAX_BACKOFF_MS = 5000;
+
 async function fetchSingles(
 	tour: string,
 	tournamentId: number,
 	apiKey: string
 ): Promise<ApiMatch[]> {
 	const url = `https://${RAPIDAPI_HOST}/tennis/v2/${tour}/tournament/results/${tournamentId}`;
-	const res = await fetch(url, {
-		headers: {
-			'Content-Type': 'application/json',
-			'x-rapidapi-host': RAPIDAPI_HOST,
-			'x-rapidapi-key': apiKey
+	for (let attempt = 0; ; attempt++) {
+		const res = await fetch(url, {
+			headers: {
+				'Content-Type': 'application/json',
+				'x-rapidapi-host': RAPIDAPI_HOST,
+				'x-rapidapi-key': apiKey
+			}
+		});
+
+		if (res.status === 429) {
+			const body = await res.text().catch(() => '');
+			const retryAfterMs = parseRetryAfterMs(res);
+			// A long Retry-After means a daily-quota reset, not a transient blip —
+			// don't sleep it out within the request; bail so the run stops.
+			const transient =
+				attempt < MAX_RETRIES && (retryAfterMs == null || retryAfterMs <= MAX_BACKOFF_MS);
+			if (!transient) throw new RateLimitError(body);
+			const backoff = Math.min(retryAfterMs ?? 500 * 2 ** attempt, MAX_BACKOFF_MS);
+			await sleep(backoff);
+			continue;
 		}
-	});
-	if (!res.ok) {
-		throw new Error(
-			`API ${res.status} for ${tour}/${tournamentId}: ${await res.text().catch(() => '')}`
-		);
+
+		if (!res.ok) {
+			throw new Error(
+				`API ${res.status} for ${tour}/${tournamentId}: ${await res.text().catch(() => '')}`
+			);
+		}
+		const json = await res.json();
+		return (json?.data?.singles ?? []) as ApiMatch[];
 	}
-	const json = await res.json();
-	return (json?.data?.singles ?? []) as ApiMatch[];
 }
 
 Deno.serve(async () => {
@@ -85,6 +129,7 @@ Deno.serve(async () => {
 	}
 
 	const report: Array<Record<string, unknown>> = [];
+	let rateLimited = false;
 
 	for (const b of (data ?? []) as Bracket[]) {
 		if (b.tour !== 'atp' && b.tour !== 'wta') {
@@ -128,9 +173,16 @@ Deno.serve(async () => {
 				report.push({ id: b.id, filled: outcome.filled });
 			}
 		} catch (e) {
+			if (e instanceof RateLimitError) {
+				// Quota is depleted — every remaining bracket would 429 too. Stop the
+				// run rather than spending one more request apiece.
+				report.push({ id: b.id, error: 'rate-limited', status: 429 });
+				rateLimited = true;
+				break;
+			}
 			report.push({ id: b.id, error: String(e instanceof Error ? e.message : e) });
 		}
 	}
 
-	return Response.json({ ok: true, processed: report.length, report });
+	return Response.json({ ok: true, rateLimited, processed: report.length, report });
 });
