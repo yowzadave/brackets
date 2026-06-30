@@ -266,8 +266,9 @@ export function isComplete(draw_size: number, results: Result[]): boolean {
 	return decided >= total;
 }
 
-// 11:00–03:00 in the given IANA timezone is "active". Invalid/empty tz → always
-// active (don't block the sync on a misconfiguration).
+// 11:00–01:00 in the given IANA timezone is "active" (i.e. through 00:59, the
+// hour after midnight). Invalid/empty tz → always active (don't block the sync
+// on a misconfiguration).
 export function isActiveHour(timezone: string | null | undefined, now: Date): boolean {
 	if (!timezone) return true;
 	try {
@@ -278,7 +279,7 @@ export function isActiveHour(timezone: string | null | undefined, now: Date): bo
 		});
 		let h = parseInt(fmt.format(now), 10);
 		if (h === 24) h = 0;
-		return h >= 11 || h < 3;
+		return h >= 11 || h < 1;
 	} catch {
 		return true;
 	}

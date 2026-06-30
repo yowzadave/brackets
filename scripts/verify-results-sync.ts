@@ -108,9 +108,10 @@ check('bye auto-advances lone player', byeOut.results[0]?.winner === 0);
 // active-hours window
 check('11:00 local is active', isActiveHour('UTC', new Date('2026-06-29T11:30:00Z')));
 check(
-	'02:00 local is active (past midnight)',
-	isActiveHour('UTC', new Date('2026-06-29T02:00:00Z'))
+	'00:30 local is active (hour after midnight)',
+	isActiveHour('UTC', new Date('2026-06-29T00:30:00Z'))
 );
+check('01:00 local is inactive', !isActiveHour('UTC', new Date('2026-06-29T01:00:00Z')));
 check('07:00 local is inactive', !isActiveHour('UTC', new Date('2026-06-29T07:00:00Z')));
 check('null timezone is always active', isActiveHour(null, new Date('2026-06-29T07:00:00Z')));
 
