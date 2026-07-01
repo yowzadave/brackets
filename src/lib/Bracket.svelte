@@ -47,7 +47,6 @@
 	let edit_result_el: Modal;
 	let first_col_container: HTMLDivElement;
 	let height = $state(1);
-	let scroll_top = $state(0);
 	let active_seed = $state<number | null>(null);
 
 	let edit_nickname_el: Modal;
@@ -94,6 +93,21 @@
 		name: string;
 		seed: number | string | null;
 		country?: string | null;
+	};
+
+	type PositionedMatch = {
+		match: Match;
+		top: number;
+		center: number;
+		center_next: number | null;
+	};
+
+	type PositionedRound = Omit<Round, 'matches'> & {
+		spacing: number;
+		offset: number;
+		fits: boolean;
+		height: number;
+		matches: PositionedMatch[];
 	};
 
 	function getWinner(results: Result[], picks: Result[], seeds: Seed[], mode: string) {
@@ -158,7 +172,7 @@
 			prev_spacing = spacing;
 			prev_offset = offset;
 
-			const rm = matches
+			const rm: PositionedMatch[] = matches
 				.slice(round.first_match, round.first_match + round.matches)
 				.map((match, i) => {
 					const top = i * spacing + offset;
@@ -188,7 +202,7 @@
 			});
 		});
 
-		return columns.reduce(
+		return columns.reduce<PositionedRound[][]>(
 			(cols, round, i) => {
 				if (i === 0) {
 					cols[0].push(round);
@@ -206,11 +220,94 @@
 		);
 	}
 
-	function handleScroll() {
-		if (first_col_container) {
-			scroll_top = first_col_container.scrollTop;
+	function connectorPath(center: number, cn: number) {
+		return `M 0 ${center} C ${col_gap / 2} ${center} ${col_gap - col_gap / 2} ${cn} ${col_gap} ${cn}`;
+	}
+
+	// Patch the connector paths directly rather than routing the offset through
+	// reactive state, so the `d` update lands in the same task as the scroll
+	// position change instead of a later scheduler flush.
+	function updateConnectors() {
+		if (!first_col_container) return;
+		const offset = first_col_container.scrollTop;
+		const paths = first_col_container.querySelectorAll<SVGPathElement>('path.connector-offset');
+		for (const path of paths) {
+			const center = Number(path.dataset.center);
+			const cn = Number(path.dataset.cn) + offset;
+			path.setAttribute('d', connectorPath(center, cn));
 		}
 	}
+
+	function handleScroll() {
+		updateConnectors();
+	}
+
+	// Wheel scrolling is performed on the browser's compositor thread: the
+	// scrolled content is painted before the scroll event ever reaches JS, so
+	// anything updated from a scroll handler trails the content by a frame.
+	// To keep the connector lines in lock-step with the wheel, take over wheel
+	// scrolling on the main thread: the wheel moves a target position and a
+	// rAF loop eases scrollTop toward it, redrawing the lines in the same
+	// frame. The easing also replaces the native smooth-scroll animation that
+	// discrete mouse wheels rely on (raw notch deltas would land as ~100px
+	// snaps).
+	let scroll_target = 0;
+	let scroll_raf = 0;
+	let scroll_prev_time = 0;
+	// Time constant of the exponential ease, ms. Smaller = snappier wheel
+	// response, larger = smoother glide on discrete wheel notches.
+	const scroll_smoothing = 70;
+
+	function animateScroll(now: number) {
+		const el = first_col_container;
+		const dt = now - scroll_prev_time;
+		scroll_prev_time = now;
+		const remaining = scroll_target - el.scrollTop;
+		let next = el.scrollTop + remaining * (1 - Math.exp(-dt / scroll_smoothing));
+		if (Math.abs(scroll_target - next) < 0.5) next = scroll_target;
+		el.scrollTop = next;
+		updateConnectors();
+		scroll_raf = next === scroll_target ? 0 : requestAnimationFrame(animateScroll);
+	}
+
+	function handleWheel(e: WheelEvent) {
+		// Horizontal-dominant gestures scroll the outer bracket container.
+		if (Math.abs(e.deltaX) >= Math.abs(e.deltaY)) return;
+		const el = first_col_container;
+		let dy = e.deltaY;
+		if (e.deltaMode === WheelEvent.DOM_DELTA_LINE) dy *= 16;
+		else if (e.deltaMode === WheelEvent.DOM_DELTA_PAGE) dy *= el.clientHeight;
+		if (!scroll_raf) scroll_target = el.scrollTop; // pick up scrollbar/keyboard moves
+		const target = Math.max(0, Math.min(el.scrollHeight - el.clientHeight, scroll_target + dy));
+		if (target === scroll_target && target === el.scrollTop) return; // at an edge; allow scroll chaining
+		e.preventDefault();
+		scroll_target = target;
+		if (!scroll_raf) {
+			scroll_prev_time = performance.now();
+			scroll_raf = requestAnimationFrame(animateScroll);
+		}
+	}
+
+	$effect(() => {
+		const el = first_col_container;
+		if (!el) return;
+		// Registered manually because it must be non-passive to preventDefault;
+		// Svelte's delegated onwheel handlers are passive.
+		el.addEventListener('wheel', handleWheel, { passive: false });
+		return () => {
+			el.removeEventListener('wheel', handleWheel);
+			if (scroll_raf) cancelAnimationFrame(scroll_raf);
+			scroll_raf = 0;
+		};
+	});
+
+	// Re-apply the current scroll offset after any layout-changing re-render
+	// (resize, picks, data load) resets the paths back to their base positions.
+	$effect(() => {
+		matches_by_round;
+		height;
+		updateConnectors();
+	});
 
 	function doNotSubmit(e: KeyboardEvent) {
 		if (e.code === 'Enter') {
@@ -657,7 +754,7 @@
 	</div>
 {/snippet}
 
-{#snippet col_section(col, mode = 'user-picks', scroll_top = 0)}
+{#snippet col_section(col: PositionedRound[], mode = 'user-picks')}
 	{#each col as round, ri}
 		<div class="flex h-full flex-col pt-4">
 			<div class="p-1 font-bold uppercase">
@@ -700,21 +797,25 @@
 					</div>
 				{/each}
 				{#if round.index < rounds.length - 1}
-					{@const offset = ri === col.length - 1 ? scroll_top : 0}
+					{@const scrolls = ri === col.length - 1}
 					<div
 						class="absolute top-0 right-0 h-full"
 						style="width: {col_gap}px; height: {round.height}px"
 					>
 						{#each round.matches as match}
-							{@const cn = match.center_next + offset}
-							<svg class="absolute top-0 left-0 h-full w-full" height="100%" width={col_gap}>
-								<path
-									d={`M 0 ${match.center} C ${col_gap / 2} ${match.center} ${col_gap - col_gap / 2} ${cn} ${col_gap} ${cn}`}
-									stroke="#98A1AE"
-									stroke-width="1"
-									fill="none"
-								/>
-							</svg>
+							{#if match.center_next != null}
+								<svg class="absolute top-0 left-0 h-full w-full" height="100%" width={col_gap}>
+									<path
+										class={scrolls ? 'connector-offset' : ''}
+										data-center={match.center}
+										data-cn={match.center_next}
+										d={connectorPath(match.center, match.center_next)}
+										stroke="#98A1AE"
+										stroke-width="1"
+										fill="none"
+									/>
+								</svg>
+							{/if}
 						{/each}
 					</div>
 				{/if}
@@ -735,7 +836,7 @@
 			onscroll={handleScroll}
 			onmousemove={handleScroll}
 		>
-			{@render col_section(first_col, mode, scroll_top)}
+			{@render col_section(first_col, mode)}
 		</div>
 	</div>
 	{#each matches_by_round.slice(1) as col}
