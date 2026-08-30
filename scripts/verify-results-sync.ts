@@ -111,7 +111,11 @@ check(
 	'00:30 local is active (hour after midnight)',
 	isActiveHour('UTC', new Date('2026-06-29T00:30:00Z'))
 );
-check('01:00 local is inactive', !isActiveHour('UTC', new Date('2026-06-29T01:00:00Z')));
+check(
+	'01:30 local is active (late-night finishes)',
+	isActiveHour('UTC', new Date('2026-06-29T01:30:00Z'))
+);
+check('02:00 local is inactive', !isActiveHour('UTC', new Date('2026-06-29T02:00:00Z')));
 check('07:00 local is inactive', !isActiveHour('UTC', new Date('2026-06-29T07:00:00Z')));
 check('null timezone is always active', isActiveHour(null, new Date('2026-06-29T07:00:00Z')));
 

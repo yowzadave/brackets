@@ -7,7 +7,8 @@
 //
 // Eligibility: tournament_id set, pickable = false (the bracket is locked),
 // end_date not in the past (1-day grace), results not already complete, and —
-// if a timezone is set — the tournament's local time is within active hours.
+// if a timezone is set — the tournament's local time is within active hours
+// (11:00–02:00, see isActiveHour).
 //
 // Required secrets: RAPIDAPI_KEY. SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are
 // injected automatically by the platform.
